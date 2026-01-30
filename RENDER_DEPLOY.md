@@ -45,7 +45,7 @@ O bug acontecia porque:
 ### Correções Aplicadas:
 1. ✅ Adicionado script de entry point no index.html: `<script type="module" src="/index.tsx"></script>`
 2. ✅ Removido import maps do index.html
-3. ✅ Instalado Tailwind CSS como dependência: `tailwindcss@^3.4.1`
+3. ✅ Instalado Tailwind CSS como dependência: `tailwindcss@^3.4.19`
 4. ✅ Criado arquivo `index.css` com diretivas do Tailwind
 5. ✅ Configurado PostCSS e Tailwind (`postcss.config.js` e `tailwind.config.js`)
 6. ✅ Importado CSS no entry point (`index.tsx`)
