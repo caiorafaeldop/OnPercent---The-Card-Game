@@ -1,9 +1,14 @@
 import { Collectible } from '../types';
 
+import { BATCH_ORIGINAL_18 } from './cards/batch_original_18';
+import { BATCH_NEON_JOY } from './cards/batch_neon_joy';
+
 export const GACHA_COST = 100;
 export const BONUS_CREDITS = 33;
 
 export const COLLECTIBLES: Collectible[] = [
+  ...BATCH_ORIGINAL_18,
+  ...BATCH_NEON_JOY,
   // --- LEGENDARY (3) ---
   { 
     id: 'hdn_nazuna', name: 'Nazuna Nanakusa', 
