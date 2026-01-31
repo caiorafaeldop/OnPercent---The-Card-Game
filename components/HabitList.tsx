@@ -46,8 +46,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
       </header>
 
       {/* Week Header */}
-      <div className="grid grid-cols-[1fr_repeat(7,minmax(0,1fr))] gap-2 mb-2 px-1">
-         <div className="invisible">Label</div>
+      <div className="grid grid-cols-7 gap-2 mb-2 px-1">
          {weekDays.map((day) => (
            <div key={day.toString()} className="flex flex-col items-center justify-center text-xs opacity-60">
              <span className="font-bold">{formatDisplayDay(day)}</span>
@@ -64,9 +63,9 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
            </div>
         ) : (
           habits.map((habit) => (
-            <div key={habit.id} className="group animate-fade-in">
-              <div className="grid grid-cols-[1fr_repeat(7,minmax(0,1fr))] gap-2 items-center mb-1">
-                <div className="truncate font-medium text-lg pr-2 relative">
+            <div key={habit.id} className="group animate-fade-in py-1">
+              <div className="flex flex-col gap-2">
+                <div className="truncate font-medium text-lg relative pr-8">
                     {habit.title}
                     <button 
                       onClick={() => onDelete(habit.id)}
@@ -75,26 +74,28 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
                       <TrashIcon className="w-4 h-4" />
                     </button>
                 </div>
-                {weekDays.map((day) => {
-                  const dateKey = formatDateKey(day);
-                  const isCompleted = habit.completedDates.includes(dateKey);
-                  return (
-                    <button
-                      key={dateKey}
-                      onClick={() => onToggle(habit.id, dateKey)}
-                      className={`
-                        aspect-square rounded-full flex items-center justify-center transition-all duration-300
-                        ${isCompleted 
-                          ? 'bg-black text-white dark:bg-white dark:text-black scale-100 shadow-sm' 
-                          : 'bg-gray-200 dark:bg-gray-800 text-transparent scale-90 hover:scale-95'}
-                      `}
-                    >
-                      <CheckIcon className="w-3 h-3" />
-                    </button>
-                  );
-                })}
+                <div className="grid grid-cols-7 gap-2 items-center">
+                  {weekDays.map((day) => {
+                    const dateKey = formatDateKey(day);
+                    const isCompleted = habit.completedDates.includes(dateKey);
+                    return (
+                      <button
+                        key={dateKey}
+                        onClick={() => onToggle(habit.id, dateKey)}
+                        className={`
+                          aspect-square rounded-full flex items-center justify-center transition-all duration-300
+                          ${isCompleted 
+                            ? 'bg-black text-white dark:bg-white dark:text-black scale-100 shadow-sm' 
+                            : 'bg-gray-200 dark:bg-gray-800 text-transparent scale-90 hover:scale-95'}
+                        `}
+                      >
+                        <CheckIcon className="w-3 h-3" />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div className="h-px w-full bg-gray-100 dark:bg-gray-800 mt-3" />
+              <div className="h-px w-full bg-gray-100 dark:bg-gray-800 mt-4" />
             </div>
           ))
         )}

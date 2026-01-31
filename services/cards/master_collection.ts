@@ -197,20 +197,7 @@ export const HISTORIA_DA_NOITE_COLLECTION: Collectible[] = [
       "agi": 5
     }
   },
-  {
-    "id": "hn_018",
-    "name": "Alma Urbana IV",
-    "description": "Procurando algo que talvez não exista.",
-    "rarity": "rare",
-    "collection": "historias-da-noite",
-    "icon": "🌙",
-    "image": "/cards/historias-da-noite/hn_018.jpg",
-    "stats": {
-      "str": 5,
-      "int": 5,
-      "agi": 3
-    }
-  },
+
   {
     "id": "hn_019",
     "name": "Tempestade de Neon",
@@ -267,20 +254,7 @@ export const HISTORIA_DA_NOITE_COLLECTION: Collectible[] = [
       "agi": 4
     }
   },
-  {
-    "id": "hn_023",
-    "name": "Alma Urbana IV",
-    "description": "Apenas mais uma história na multidão.",
-    "rarity": "rare",
-    "collection": "historias-da-noite",
-    "icon": "🌙",
-    "image": "/cards/historias-da-noite/hn_023.jpg",
-    "stats": {
-      "str": 5,
-      "int": 4,
-      "agi": 4
-    }
-  },
+
   {
     "id": "hn_024",
     "name": "Guarda-Chuva Solitário",
@@ -339,7 +313,7 @@ export const HISTORIA_DA_NOITE_COLLECTION: Collectible[] = [
   },
   {
     "id": "hn_028",
-    "name": "Alma Urbana IV",
+    "name": "Alma Urbana VI",
     "description": "Caminhando sem destino pelas ruas iluminadas.",
     "rarity": "rare",
     "collection": "historias-da-noite",
@@ -409,7 +383,7 @@ export const HISTORIA_DA_NOITE_COLLECTION: Collectible[] = [
   },
   {
     "id": "hn_033",
-    "name": "Alma Urbana IV",
+    "name": "Alma Urbana VII",
     "description": "A cidade nunca dorme, e nós também não.",
     "rarity": "rare",
     "collection": "historias-da-noite",
@@ -479,7 +453,7 @@ export const HISTORIA_DA_NOITE_COLLECTION: Collectible[] = [
   },
   {
     "id": "hn_038",
-    "name": "Alma Urbana IV",
+    "name": "Alma Urbana VIII",
     "description": "Procurando algo que talvez não exista.",
     "rarity": "common",
     "collection": "historias-da-noite",
@@ -549,7 +523,7 @@ export const HISTORIA_DA_NOITE_COLLECTION: Collectible[] = [
   },
   {
     "id": "hn_043",
-    "name": "Alma Urbana IV",
+    "name": "Alma Urbana IX",
     "description": "Apenas mais uma história na multidão.",
     "rarity": "common",
     "collection": "historias-da-noite",
@@ -619,7 +593,7 @@ export const HISTORIA_DA_NOITE_COLLECTION: Collectible[] = [
   },
   {
     "id": "hn_048",
-    "name": "Alma Urbana IV",
+    "name": "Alma Urbana X",
     "description": "Caminhando sem destino pelas ruas iluminadas.",
     "rarity": "common",
     "collection": "historias-da-noite",
@@ -689,7 +663,7 @@ export const HISTORIA_DA_NOITE_COLLECTION: Collectible[] = [
   },
   {
     "id": "hn_053",
-    "name": "Alma Urbana IV",
+    "name": "Alma Urbana XI",
     "description": "A cidade nunca dorme, e nós também não.",
     "rarity": "common",
     "collection": "historias-da-noite",
@@ -759,7 +733,7 @@ export const HISTORIA_DA_NOITE_COLLECTION: Collectible[] = [
   },
   {
     "id": "hn_058",
-    "name": "Alma Urbana IV",
+    "name": "Alma Urbana XII",
     "description": "Procurando algo que talvez não exista.",
     "rarity": "common",
     "collection": "historias-da-noite",

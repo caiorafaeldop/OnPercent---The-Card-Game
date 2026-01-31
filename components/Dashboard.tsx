@@ -13,15 +13,35 @@ interface DashboardProps {
   inventory: string[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ habits, xp, level, inventory }) => {
+import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
+
+// ... (imports)
+
+interface DashboardProps {
+  habits: Habit[];
+  xp: number;
+  level: number;
+  inventory: string[];
+  onToggle: (habitId: string, date: string) => void;
+}
+
+const Dashboard: React.FC<DashboardProps> = ({ habits, xp, level, inventory, onToggle }) => {
   const [selectedHabitId, setSelectedHabitId] = useState<string>('all');
   const [viewCardId, setViewCardId] = useState<string | null>(null);
+  
+  // Calendar View State
+  const [viewDate, setViewDate] = useState(new Date());
 
   const filteredHabits = selectedHabitId === 'all' 
     ? habits 
     : habits.filter(h => h.id === selectedHabitId);
 
-  // Calculate Streak Stats
+  // ... (Streak stats code remains same, omitted for brevity in replacement if not touched, but since it's a replace block, I must be careful. 
+  // Actually, I should use multi_replace or ensure I cover the whole file correctly if I'm replacing large chunks. 
+  // Let's stick to replacing the specific parts or the whole component logic if easier. 
+  // Given the complexity of mixing state and render, I will replace the component body logic.)
+
+  // Calculate Streak Stats - KEEPING AS IS
   const currentStreak = selectedHabitId !== 'all' 
      ? calculateCurrentStreak(filteredHabits[0]?.completedDates || []) 
      : habits.reduce((max, h) => Math.max(max, calculateCurrentStreak(h.completedDates)), 0);
@@ -30,17 +50,17 @@ const Dashboard: React.FC<DashboardProps> = ({ habits, xp, level, inventory }) =
      ? calculateBestStreak(filteredHabits[0]?.completedDates || [])
      : habits.reduce((max, h) => Math.max(max, calculateBestStreak(h.completedDates)), 0);
 
-  // --- Calendar Header Logic ---
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
+  // --- Calendar Logic ---
+  const currentMonth = viewDate.getMonth();
+  const currentYear = viewDate.getFullYear();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay(); // 0 = Sun, 1 = Mon...
-  const currentMonthName = today.toLocaleDateString('pt-BR', { month: 'long' });
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay(); 
+  const currentMonthName = viewDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+  const handlePrevMonth = () => setViewDate(new Date(currentYear, currentMonth - 1, 1));
+  const handleNextMonth = () => setViewDate(new Date(currentYear, currentMonth + 1, 1));
 
   const getDayStatus = (day: number) => {
-    // Force specific timezone handling if needed, but YYYY-MM-DD should filter correctly
-    // Note: JS Date month is 0-indexed, so +1
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
     
     // Check if ANY filtered habit was completed on this day
@@ -54,22 +74,23 @@ const Dashboard: React.FC<DashboardProps> = ({ habits, xp, level, inventory }) =
     if (completedCount > filteredHabits.length / 2) return 'good';
     return 'some';
   };
-
-  // Gacha Stats Logic
+  
+  // ... (Gacha Stats Logic remains same)
+  // ... (Rarity Stats Logic remains same)
   const getRarityStats = () => {
-    const stats = { common: 0, rare: 0, epic: 0, legendary: 0 };
+    // ... (logic from original file)
+    const stats: Record<string, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
     inventory.forEach(id => {
        const item = COLLECTIBLES.find(c => c.id === id);
-       if (item) {
+       if (item && item.rarity) {
           if (stats[item.rarity] !== undefined) stats[item.rarity]++;
        }
     });
-    
     return [
-      { name: 'Comum', value: stats.common, color: '#9CA3AF' }, // Gray 400
-      { name: 'Raro', value: stats.rare, color: '#60A5FA' }, // Blue 400
-      { name: 'Épico', value: stats.epic, color: '#A78BFA' }, // Purple 400
-      { name: 'Lendário', value: stats.legendary, color: '#FBBF24' } // Amber 400
+      { name: 'Comum', value: stats.common, color: '#9CA3AF' },
+      { name: 'Raro', value: stats.rare, color: '#60A5FA' },
+      { name: 'Épico', value: stats.epic, color: '#A78BFA' },
+      { name: 'Lendário', value: stats.legendary, color: '#FBBF24' }
     ].filter(i => i.value > 0);
   };
   const rarityData = getRarityStats();
@@ -77,7 +98,7 @@ const Dashboard: React.FC<DashboardProps> = ({ habits, xp, level, inventory }) =
 
   return (
     <div className="flex flex-col h-full space-y-8 pb-20 overflow-y-auto no-scrollbar">
-      {/* Header Stats */}
+       {/* ... (Header Stats - keeping same) */}
       <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-2xl flex flex-col justify-center items-center shadow-sm">
              <span className="text-xs uppercase font-bold text-gray-400 tracking-wider">Nível</span>
@@ -119,10 +140,16 @@ const Dashboard: React.FC<DashboardProps> = ({ habits, xp, level, inventory }) =
         </div>
 
         <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 border border-gray-100 dark:border-gray-800 shadow-sm">
-           <div className="flex justify-between mb-6">
-              <span className="font-bold text-sm bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full uppercase text-[10px] tracking-wide">
-                  {currentMonthName}
-              </span>
+           <div className="flex justify-between items-center mb-6">
+                <button onClick={handlePrevMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+                    <ChevronLeftIcon className="w-4 h-4" />
+                </button>
+                <span className="font-bold text-sm bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full uppercase text-[10px] tracking-wide">
+                    {currentMonthName}
+                </span>
+                <button onClick={handleNextMonth} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full">
+                    <ChevronRightIcon className="w-4 h-4" />
+                </button>
            </div>
            
            <div className="grid grid-cols-7 gap-2 mb-2 text-center">
@@ -139,24 +166,31 @@ const Dashboard: React.FC<DashboardProps> = ({ habits, xp, level, inventory }) =
               {Array(daysInMonth).fill(null).map((_, i) => {
                   const day = i + 1;
                   const status = getDayStatus(day);
+                  const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
                   
                   let bgClass = 'bg-gray-50 dark:bg-gray-800 text-gray-300';
                   let ringClass = '';
+                  let cursorClass = selectedHabitId !== 'all' ? 'cursor-pointer hover:opacity-80' : 'cursor-default';
                   
                   if (status === 'completed') bgClass = 'bg-green-500 shadow-lg shadow-green-500/30 text-white scale-110';
                   if (status === 'perfect') bgClass = 'bg-green-500 shadow-lg shadow-green-500/30 text-white scale-110';
                   if (status === 'good') bgClass = 'bg-green-400/60 text-white';
                   if (status === 'some') bgClass = 'bg-green-200/50 dark:bg-green-900/40 text-green-900 dark:text-green-100';
 
-                  const isToday = day === today.getDate();
                   if (isToday) ringClass = 'ring-2 ring-black dark:ring-white ring-offset-2 dark:ring-offset-black';
 
                   return (
                       <div 
                         key={day} 
+                        onClick={() => {
+                            if (selectedHabitId !== 'all') {
+                                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                onToggle(selectedHabitId, dateStr);
+                            }
+                        }}
                         className={`
                             aspect-square rounded-xl flex items-center justify-center text-xs font-bold transition-all
-                            ${bgClass} ${ringClass}
+                            ${bgClass} ${ringClass} ${cursorClass}
                         `}
                       >
                           {day}

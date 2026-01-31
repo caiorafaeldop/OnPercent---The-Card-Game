@@ -122,23 +122,31 @@ const App: React.FC = () => {
   };
 
   const saveJournalEntry = (entry: JournalEntry, claimReward?: boolean) => {
+    const today = new Date().toLocaleDateString('en-CA');
+    const isToday = entry.date === today;
+
     const exists = journal.find(e => e.id === entry.id);
     if (!exists) {
         let earnedCredits = 0;
-        if (claimReward) earnedCredits = 100;
+        let earnedXp = 0;
+
+        // Only award base XP if it's a new entry for TODAY
+        if (isToday) {
+            earnedXp = Gamification.XP_REWARDS.JOURNAL_ENTRY;
+            if (claimReward) earnedCredits = 100;
+        }
 
         setUser(prev => ({
             ...prev,
-            xp: prev.xp + Gamification.XP_REWARDS.JOURNAL_ENTRY,
+            xp: prev.xp + earnedXp,
             credits: prev.credits + earnedCredits, 
-            level: Gamification.calculateLevel(prev.xp + Gamification.XP_REWARDS.JOURNAL_ENTRY)
+            level: Gamification.calculateLevel(prev.xp + earnedXp)
         }));
         setJournal([...journal, entry]);
     } else {
-        // Even if updating, if the reward is claimed newly (rare case if valid logic) 
-        // But logic in Journal.tsx handles claiming only once. 
-        // If updating an existing entry triggers a reward (e.g. was short, now long enough and not claimed today)
-        if (claimReward) {
+        // Update existing entry
+        // If updating TODAY's entry triggers a reward (e.g. was short, now long enough and not claimed today)
+        if (isToday && claimReward) {
             setUser(prev => ({
                 ...prev,
                 credits: prev.credits + 100
@@ -184,7 +192,7 @@ const App: React.FC = () => {
       case 'habits':
         return <HabitList habits={habits} onAdd={addHabit} onToggle={toggleHabit} onDelete={deleteHabit} />;
       case 'dashboard':
-        return <Dashboard habits={habits} xp={user.xp} level={user.level} inventory={user.inventory} />;
+        return <Dashboard habits={habits} xp={user.xp} level={user.level} inventory={user.inventory} onToggle={toggleHabit} />;
       case 'journal':
         return <Journal entries={journal} onSave={saveJournalEntry} />;
       case 'profile':

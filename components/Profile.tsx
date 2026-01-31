@@ -3,7 +3,8 @@ import { UserState, Collectible } from '../types';
 import { ACHIEVEMENTS_LIST, LEVEL_THRESHOLDS } from '../services/gamification';
 import { pullGacha, COLLECTIBLES, GACHA_COST, BONUS_CREDITS } from '../services/gacha';
 import { exportData, saveUser } from '../services/storage';
-import { TrophyIcon } from './Icons';
+import { BookIcon, TrophyIcon } from './Icons';
+import CollectionModal from './CollectionModal';
 
 interface ProfileProps {
   user: UserState;
@@ -18,6 +19,7 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
   const [lastReward, setLastReward] = useState<string | null>(null);
   const [viewCard, setViewCard] = useState<Collectible | null>(null);
   const [showBackupAlert, setShowBackupAlert] = useState(false);
+  const [showCollection, setShowCollection] = useState(false);
 
   const nextLevelXP = LEVEL_THRESHOLDS[user.level] || 100000;
   const currentLevelXP = LEVEL_THRESHOLDS[user.level - 1] || 0;
@@ -192,7 +194,16 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
       </div>
 
       <div>
-        <h3 className="text-xs font-bold uppercase mb-4 opacity-50">Inventário de Cartas</h3>
+        <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xs font-bold uppercase opacity-50">Inventário de Cartas</h3>
+            <button 
+                onClick={() => setShowCollection(true)}
+                className="flex items-center gap-2 text-[10px] font-bold uppercase bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
+            >
+                <BookIcon className="w-3 h-3" />
+                Ver Todas
+            </button>
+        </div>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {COLLECTIBLES.filter(c => user.inventory.includes(c.id)).map(item => {
             const isLegendary = item.rarity === 'legendary';
@@ -318,6 +329,13 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
              </div>
           </div>
       )}
+
+      {/* Collection Modal */}
+      <CollectionModal 
+        isOpen={showCollection} 
+        onClose={() => setShowCollection(false)} 
+        userInventory={user.inventory} 
+      />
     </div>
   );
 };
