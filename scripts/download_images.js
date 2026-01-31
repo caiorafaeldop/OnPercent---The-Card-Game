@@ -76,8 +76,8 @@ async function run() {
         
         rawPrompt = rawPrompt.replace(/^Prompt Ultra-Detalhado:\s*/i, '');
 
-        // WRAPPER DE QUALIDADE: Força o estilo anime estilizado (Call of the Night aesthetic)
-        const qualityBooster = ", (Call of the Night anime style:1.2), beautiful stylized anime girl, cel shaded, flat color, thick clean lines, purple and blue night aesthetic, vibrant neon colors, masterpiece, best quality, symmetrical face, detailed eyes, 8k, high resolution, sharp focus";
+        // BOOSTER DE SEGURANÇA ANATÔMICA: Focado em evitar membros extras e garantir estilo 2D
+        const qualityBooster = ", upper body shot, flat 2D anime illustration, cel-shaded, (perfect anatomy:1.5), (only two arms:1.5), (only two legs:1.5), (symmetrical facial features:1.4), accurate hands, clean lines, purple night aesthetic, cinematic lighting, masterpiece, --no realistic, --no 3d, --no extra limbs, --no deformed";
         const finalPrompt = rawPrompt + qualityBooster;
 
         const cleanPrompt = encodeURIComponent(finalPrompt);

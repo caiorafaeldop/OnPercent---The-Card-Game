@@ -17,16 +17,16 @@ const characters = [
 ];
 
 const basePrompts = [
-    { title: "Nazuna das Alturas", desc: "Call of the Night anime style, beautiful vampire girl with twin braids sitting on a water tower, giant moon, purple night, symmetrical face, detailed eyes, cel shaded" },
-    { title: "Kaito o Sedento", desc: "Call of the Night anime style, handsome boy leaning on a neon blue vending machine, night alley, symmetrical face, soda can, cel shaded" },
-    { title: "Akane a Veloz", desc: "Call of the Night anime style, beautiful girl on a neon motorcycle, rainy city, cyan and pink lights, symmetrical face, cel shaded" },
-    { title: "Chef Hiro", desc: "Call of the Night anime style, friendly chef cooking with fire, outdoor night market, glowing lanterns, symmetrical face, cel shaded" },
-    { title: "Yuki a Insone", desc: "Call of the Night anime style, beautiful girl sleeping at a desk, moon through window, blue moonlight, cozy lamp, symmetrical face, cel shaded" },
-    { title: "Sora a Dançarina", desc: "Call of the Night anime style, girl dancing on a rooftop, 360 neon city view, dynamic pose, symmetrical happy face, cel shaded" },
-    { title: "O Encantador de Gatos", desc: "Call of the Night anime style, guy in alley talking to black cat with glowing eyes, symmetrical face, pink/purple light, cel shaded" },
-    { title: "Sato do Trem", desc: "Call of the Night anime style, handsome man sleeping in a train, neon city window, purple lighting, symmetrical face, cel shaded" },
-    { title: "Rivals de Neon", desc: "Call of the Night anime style, boy and girl playing arcade, laughing, symmetrical faces, red/blue light, cel shaded" },
-    { title: "Gangue da Konbini", desc: "Call of the Night anime style, friends outside convenience store, ice cream, symmetrical faces, night environment, cel shaded" }
+    { title: "Nazuna das Alturas", desc: "high-quality 2D digital anime art, beautiful girl with twin braided pigtails, sitting clearly on a water tower at night, visible two arms and two legs, exactly five fingers, symmetrical beautiful face, large detailed eyes, purple night sky, massive moon, cel-shaded illustration" },
+    { title: "Kaito o Sedento", desc: "high-quality 2D digital anime art, handsome boy with messy hair, leaning on a neon blue vending machine, visible hands holding a soda can, exactly five fingers, symmetrical face, clear facial features, blue night alley, vibrant neon highlights, cel-shaded" },
+    { title: "Akane a Veloz", desc: "high-quality 2D digital anime art, cheerful girl on a neon motorcycle, riding through a rainy city, visible two arms on handlebars, symmetrical face, happy expression, vibrant cyan and pink colors, wet pavement reflections, crisp linework" },
+    { title: "Chef Hiro", desc: "high-quality 2D digital anime art, friendly chef with headband, cooking with dynamic fire in a wok, both arms and hands visible, exactly five fingers, symmetrical laughing face, night market background, glowing lanterns, rich colors" },
+    { title: "Yuki a Insone", desc: "high-quality 2D digital anime art, beautiful girl with glasses sitting at a desk, symmetrical face, detailed eyes, sleeping peacefully, visible hands on books, cozy room, blue moonlight through window, soft lo-fi aesthetic" },
+    { title: "Sora a Dançarina", desc: "high-quality 2D digital anime art, girl dancing on a skyscraper rooftop, full body view, clear two arms and two legs in a dynamic pose, symmetrical happy face, glowing neon city skyline far below, starry night, sharp outlines" },
+    { title: "O Encantador de Gatos", desc: "high-quality 2D digital anime art, cool guy in trench coat squatting in an alleyway, visible hands petting a black cat, symmetrical attractive face, purple neon light reflections, wet floor, masterpiece 2D illustration" },
+    { title: "Sato do Trem", desc: "high-quality 2D digital anime art, handsome man sleeping in a train seat, symmetrical face, peaceful expression, visible arms and hands resting, neon city lights outside the window, lo-fi purple night atmosphere" },
+    { title: "Rivals de Neon", desc: "high-quality 2D digital anime art, boy and girl playing arcade game together, smiling, symmetrical faces, visible hands on buttons, vibrant screen light, colorful arcade background, clean cel-shaded style" },
+    { title: "Gangue da Konbini", desc: "high-quality 2D digital anime art, three friends laughing outside a bright Japanese convenience store, visible limbs and hands holding ice cream, symmetrical faces, detailed night street, official anime art style" }
 ];
 
 // Generate more to fill 100
@@ -35,7 +35,7 @@ for (let i = 11; i <= 100; i++) {
     const theme = themes[i % themes.length];
     basePrompts.push({
         title: `Carta ${i}`,
-        desc: `Call of the Night anime style, ${char} in ${theme.tags}, symmetrical beautiful face, cel shaded, vibrant colors, 8k`
+        desc: `high-quality 2D digital anime art, ${char}, full view, standing in ${theme.tags}, (symmetrical body and limbs:1.3), (exactly five fingers on each hand:1.3), perfectly drawn face, clear eyes, vibrant neon night aesthetic, clean cel-shaded linework`
     });
 }
 
