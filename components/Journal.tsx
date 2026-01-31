@@ -27,7 +27,7 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
     if (!content.trim()) return;
 
     let claimReward = false;
-    const rewardKey = `journal_reward_claimed_${today}`;
+    const rewardKey = `journal_reward_v2_${today}`;
     const alreadyClaimed = localStorage.getItem(rewardKey);
 
     if (content.length > 10 && !alreadyClaimed) {
@@ -37,7 +37,6 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
         setTimeout(() => setRewardMessage(null), 3000);
     }
 
-    // @ts-ignore
     onSave({
       id: savedToday ? (entries.find(e => e.date === today)?.id || Date.now().toString()) : Date.now().toString(),
       date: today,
