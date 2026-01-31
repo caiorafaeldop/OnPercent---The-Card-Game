@@ -76,8 +76,8 @@ async function run() {
         
         rawPrompt = rawPrompt.replace(/^Prompt Ultra-Detalhado:\s*/i, '');
 
-        // WRAPPER DE QUALIDADE: Adiciona tags que estabilizam rostos e estilo
-        const qualityBooster = " masterpiece, best quality, official art, extremely detailed, beautiful detailed face, symmetrical face, beautiful detailed eyes, sharp focus, 8k, high resolution, soft cinematic lighting, (vibrant colors), clean lines, high quality anime style";
+        // WRAPPER DE QUALIDADE: Força o estilo anime estilizado (Call of the Night aesthetic)
+        const qualityBooster = ", (Call of the Night anime style:1.2), beautiful stylized anime girl, cel shaded, flat color, thick clean lines, purple and blue night aesthetic, vibrant neon colors, masterpiece, best quality, symmetrical face, detailed eyes, 8k, high resolution, sharp focus";
         const finalPrompt = rawPrompt + qualityBooster;
 
         const cleanPrompt = encodeURIComponent(finalPrompt);

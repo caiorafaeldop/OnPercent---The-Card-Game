@@ -17,16 +17,16 @@ const characters = [
 ];
 
 const basePrompts = [
-    { title: "Nazuna das Alturas", desc: "beautiful girl with twin braids sitting on a water tower, giant moon behind, purple night sky, symmetrical face, detailed eyes, masterful lighting" },
-    { title: "Kaito o Sedento", desc: "handsome boy leaning on a glowing blue vending machine, night alleyway, symmetrical face, holding a soda can, soft light reflections" },
-    { title: "Akane a Veloz", desc: "beautiful delivery girl on a neon motorcycle, rainy city, motion blur, cyan and pink reflections, symmetrical face, happy expression" },
-    { title: "Chef Hiro", desc: "friendly chef cooking with fire in a wok, outdoor night market, orange flames, glowing lanterns, symmetrical face, detailed focus" },
-    { title: "Yuki a Insone", desc: "beautiful girl sleeping at a desk with books, massive moon through window, blue moonlight, cozy warm lamp, symmetrical face" },
-    { title: "Sora a Dançarina", desc: "girl dancing on a rooftop edge, vast 360 neon city view, dynamic pose, symmetrical happy face, glowing bokeh lights" },
-    { title: "O Encantador de Gatos", desc: "guy squatting in a dark neon alleyway talking to a black cat with glowing eyes, symmetrical face, pink and purple light, masterpiece" },
-    { title: "Sato do Trem", desc: "handsome man sleeping in a train, blurred neon city through window, soft purple lighting, symmetrical peaceful face" },
-    { title: "Rivals de Neon", desc: "boy and girl playing arcade game, laughing, symmetrical expressive faces, red/blue screen light reflections, detailed eyes" },
-    { title: "Gangue da Konbini", desc: "group of friends laughing outside a bright convenience store, holding ice cream, symmetrical faces, detailed night environment" }
+    { title: "Nazuna das Alturas", desc: "Call of the Night anime style, beautiful vampire girl with twin braids sitting on a water tower, giant moon, purple night, symmetrical face, detailed eyes, cel shaded" },
+    { title: "Kaito o Sedento", desc: "Call of the Night anime style, handsome boy leaning on a neon blue vending machine, night alley, symmetrical face, soda can, cel shaded" },
+    { title: "Akane a Veloz", desc: "Call of the Night anime style, beautiful girl on a neon motorcycle, rainy city, cyan and pink lights, symmetrical face, cel shaded" },
+    { title: "Chef Hiro", desc: "Call of the Night anime style, friendly chef cooking with fire, outdoor night market, glowing lanterns, symmetrical face, cel shaded" },
+    { title: "Yuki a Insone", desc: "Call of the Night anime style, beautiful girl sleeping at a desk, moon through window, blue moonlight, cozy lamp, symmetrical face, cel shaded" },
+    { title: "Sora a Dançarina", desc: "Call of the Night anime style, girl dancing on a rooftop, 360 neon city view, dynamic pose, symmetrical happy face, cel shaded" },
+    { title: "O Encantador de Gatos", desc: "Call of the Night anime style, guy in alley talking to black cat with glowing eyes, symmetrical face, pink/purple light, cel shaded" },
+    { title: "Sato do Trem", desc: "Call of the Night anime style, handsome man sleeping in a train, neon city window, purple lighting, symmetrical face, cel shaded" },
+    { title: "Rivals de Neon", desc: "Call of the Night anime style, boy and girl playing arcade, laughing, symmetrical faces, red/blue light, cel shaded" },
+    { title: "Gangue da Konbini", desc: "Call of the Night anime style, friends outside convenience store, ice cream, symmetrical faces, night environment, cel shaded" }
 ];
 
 // Generate more to fill 100
@@ -35,7 +35,7 @@ for (let i = 11; i <= 100; i++) {
     const theme = themes[i % themes.length];
     basePrompts.push({
         title: `Carta ${i}`,
-        desc: `${char} in ${theme.tags}, symmetrical beautiful face, detailed eyes, ${i % 2 === 0 ? 'smiling happily' : 'focused and cool'}, high quality anime style, masterpiece, clean lines, 8k`
+        desc: `Call of the Night anime style, ${char} in ${theme.tags}, symmetrical beautiful face, cel shaded, vibrant colors, 8k`
     });
 }
 
