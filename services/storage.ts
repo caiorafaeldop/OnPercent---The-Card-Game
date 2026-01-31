@@ -34,7 +34,9 @@ export const loadUser = (): UserState => {
     name: 'Aspiring 1%', 
     credits: 100, // Start with 1 free pull
     inventory: [],
-    lastBackupDate: null
+    lastBackupDate: null,
+    mealsToday: 0,
+    lastMealDate: null
   };
   
   if (!data) return defaultUser;

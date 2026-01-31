@@ -4,6 +4,7 @@ import HabitList from './components/HabitList';
 import Dashboard from './components/Dashboard';
 import Journal from './components/Journal';
 import Profile from './components/Profile';
+import DailyBonus from './components/DailyBonus';
 import { Habit, JournalEntry, UserState, Tab } from './types';
 import * as Storage from './services/storage';
 import * as Gamification from './services/gamification';
@@ -11,7 +12,8 @@ import { GACHA_COST } from './services/gacha';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('habits');
-  const [isDark, setIsDark] = useState<boolean>(false);
+  // Lazy initialization to retrieve the theme from localStorage immediately
+  const [isDark, setIsDark] = useState<boolean>(() => Storage.loadTheme());
   
   const [habits, setHabits] = useState<Habit[]>([]);
   const [journal, setJournal] = useState<JournalEntry[]>([]);
@@ -22,14 +24,24 @@ const App: React.FC = () => {
   useEffect(() => {
     setHabits(Storage.loadHabits());
     setJournal(Storage.loadJournal());
-    setUser(Storage.loadUser());
-    setIsDark(Storage.loadTheme());
+    const loadedUser = Storage.loadUser();
+
+    // Check for daily reset of meals
+    const today = new Date().toDateString();
+    if (loadedUser.lastMealDate !== today) {
+        loadedUser.mealsToday = 0;
+        loadedUser.lastMealDate = today;
+        Storage.saveUser(loadedUser); // Save reset state
+    }
+
+    setUser(loadedUser);
+    // Theme is already loaded via lazy initialization, so we don't need to set it here
     
     // Check initial achievements
     const initialHabits = Storage.loadHabits();
     const initialJournal = Storage.loadJournal();
-    const initialUser = Storage.loadUser();
-    const unlocked = Gamification.checkAchievements(initialUser, initialHabits, initialJournal);
+    // Use the potentially reset user data
+    const unlocked = Gamification.checkAchievements(loadedUser, initialHabits, initialJournal);
     setUnlockedAchievements(unlocked);
   }, []);
 
@@ -57,10 +69,11 @@ const App: React.FC = () => {
     }
   }, [habits, journal, user, unlockedAchievements]);
 
-  const addHabit = (title: string) => {
+  const addHabit = (title: string, difficulty: 'easy' | 'medium' | 'hard') => {
     const newHabit: Habit = {
       id: Date.now().toString(),
       title,
+      difficulty,
       createdAt: new Date().toISOString(),
       completedDates: []
     };
@@ -79,26 +92,27 @@ const App: React.FC = () => {
         const isCompleted = h.completedDates.includes(date);
         let newCompletedDates;
         
+        const difficultyKey = `HABIT_${(h.difficulty || 'medium').toUpperCase()}` as keyof typeof Gamification.XP_REWARDS;
+        const xpReward = Gamification.XP_REWARDS[difficultyKey] || 35; // Default to Medium (35)
+        const creditReward = Gamification.CREDITS_REWARDS[(h.difficulty || 'medium').toUpperCase() as keyof typeof Gamification.CREDITS_REWARDS] || 40; // Default to Medium (40)
+
         if (isCompleted) {
-          // Remove date (Undo) -> Remove Credit if possible? 
-          // For simplicity, we don't punish credits on undo to avoid negative feeling, 
-          // or we can remove 100 credits. Let's keep it positive only for now, or strict.
-          // Let's go strict: Remove 100 credits if they have them.
+          // Remove date (Undo)
           newCompletedDates = h.completedDates.filter(d => d !== date);
           setUser(prev => ({
             ...prev,
-            xp: Math.max(0, prev.xp - Gamification.XP_REWARDS.HABIT_COMPLETE),
-            credits: Math.max(0, prev.credits - GACHA_COST), 
-            level: Gamification.calculateLevel(Math.max(0, prev.xp - Gamification.XP_REWARDS.HABIT_COMPLETE))
+            xp: Math.max(0, prev.xp - xpReward),
+            credits: Math.max(0, prev.credits - creditReward), // Now removing specific amount
+            level: Gamification.calculateLevel(Math.max(0, prev.xp - xpReward))
           }));
         } else {
-          // Add date (Complete) -> Add 100 Credits (1 Pull)
+          // Add date (Complete)
           newCompletedDates = [...h.completedDates, date];
           setUser(prev => ({
             ...prev,
-            xp: prev.xp + Gamification.XP_REWARDS.HABIT_COMPLETE,
-            credits: prev.credits + GACHA_COST,
-            level: Gamification.calculateLevel(prev.xp + Gamification.XP_REWARDS.HABIT_COMPLETE)
+            xp: prev.xp + xpReward,
+            credits: prev.credits + creditReward,
+            level: Gamification.calculateLevel(prev.xp + xpReward)
           }));
         }
         return { ...h, completedDates: newCompletedDates };
@@ -107,17 +121,29 @@ const App: React.FC = () => {
     });
   };
 
-  const saveJournalEntry = (entry: JournalEntry) => {
+  const saveJournalEntry = (entry: JournalEntry, claimReward?: boolean) => {
     const exists = journal.find(e => e.id === entry.id);
     if (!exists) {
+        let earnedCredits = 0;
+        if (claimReward) earnedCredits = 100;
+
         setUser(prev => ({
             ...prev,
             xp: prev.xp + Gamification.XP_REWARDS.JOURNAL_ENTRY,
-            credits: prev.credits + 50, // Bonus credits for journaling
+            credits: prev.credits + earnedCredits, 
             level: Gamification.calculateLevel(prev.xp + Gamification.XP_REWARDS.JOURNAL_ENTRY)
         }));
         setJournal([...journal, entry]);
     } else {
+        // Even if updating, if the reward is claimed newly (rare case if valid logic) 
+        // But logic in Journal.tsx handles claiming only once. 
+        // If updating an existing entry triggers a reward (e.g. was short, now long enough and not claimed today)
+        if (claimReward) {
+            setUser(prev => ({
+                ...prev,
+                credits: prev.credits + 100
+            }));
+        }
         setJournal(journal.map(e => e.id === entry.id ? entry : e));
     }
   };
@@ -134,12 +160,31 @@ const App: React.FC = () => {
     }));
   };
 
+  const handleRecordMeal = () => {
+      const today = new Date().toDateString();
+      if ((user.mealsToday || 0) < 5) {
+          setUser(prev => ({
+              ...prev,
+              credits: prev.credits + 20,
+              mealsToday: (prev.mealsToday || 0) + 1,
+              lastMealDate: today
+          }));
+          // Play sounds
+          import('./services/audio').then(({ soundService }) => {
+              soundService.playClick();
+              if ((user.mealsToday || 0) + 1 === 5) {
+                  soundService.playSuccess();
+              }
+          });
+      }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'habits':
         return <HabitList habits={habits} onAdd={addHabit} onToggle={toggleHabit} onDelete={deleteHabit} />;
       case 'dashboard':
-        return <Dashboard habits={habits} xp={user.xp} level={user.level} />;
+        return <Dashboard habits={habits} xp={user.xp} level={user.level} inventory={user.inventory} />;
       case 'journal':
         return <Journal entries={journal} onSave={saveJournalEntry} />;
       case 'profile':
@@ -148,6 +193,7 @@ const App: React.FC = () => {
           unlockedAchievements={unlockedAchievements} 
           onAddCredits={handleAddCredits}
           onPullGacha={handlePullGacha}
+          onRecordMeal={handleRecordMeal}
         />;
       default:
         return <HabitList habits={habits} onAdd={addHabit} onToggle={toggleHabit} onDelete={deleteHabit} />;
@@ -161,7 +207,12 @@ const App: React.FC = () => {
       isDark={isDark}
       toggleTheme={() => setIsDark(!isDark)}
     >
-      {renderContent()}
+      <div className="w-full max-w-md mx-auto h-full flex flex-col">
+        <DailyBonus onAddCredits={handleAddCredits} />
+        <div className="flex-1 min-h-0 overflow-hidden relative">
+            {renderContent()}
+        </div>
+      </div>
     </Layout>
   );
 };

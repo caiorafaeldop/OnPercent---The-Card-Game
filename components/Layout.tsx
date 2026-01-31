@@ -19,7 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDar
   ];
 
   return (
-    <div className={`h-screen w-full overflow-hidden flex flex-col bg-white text-black transition-colors duration-300 ${isDark ? 'dark bg-black text-white' : ''}`}>
+    <div className="h-screen w-full overflow-hidden flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors duration-300">
       
       {/* Top Bar for Theme Toggle */}
       <div className="absolute top-0 right-0 p-4 z-50">

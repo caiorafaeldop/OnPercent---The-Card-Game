@@ -1,6 +1,7 @@
 export interface Habit {
   id: string;
   title: string;
+  difficulty: 'easy' | 'medium' | 'hard';
   createdAt: string; // ISO Date
   completedDates: string[]; // Array of YYYY-MM-DD
 }
@@ -31,9 +32,10 @@ export interface Collectible {
   id: string;
   name: string;
   description: string;
-  rarity: 'common' | 'rare' | 'legendary';
-  collection: 'core' | 'call_of_the_night';
+  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  collection: 'core' | 'historias-da-noite';
   icon: string; // Emoji or simple visual rep
+  image?: string; // Path to local asset
   stats: CardStats;
 }
 
@@ -44,6 +46,8 @@ export interface UserState {
   credits: number; // Currency for Gacha (100 = 1 pull)
   inventory: string[]; // IDs of collected items
   lastBackupDate: string | null;
+  mealsToday: number;
+  lastMealDate: string | null; // YYYY-MM-DD
 }
 
 export type Tab = 'habits' | 'dashboard' | 'journal' | 'profile';

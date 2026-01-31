@@ -3,14 +3,16 @@ import { JournalEntry } from '../types';
 
 interface JournalProps {
   entries: JournalEntry[];
-  onSave: (entry: JournalEntry) => void;
+  onSave: (entry: JournalEntry, claimReward?: boolean) => void;
 }
 
 const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
-  const today = new Date().toISOString().split('T')[0];
+  // Use local date instead of UTC to avoid "tomorrow" bug in evenings
+  const today = new Date().toLocaleDateString('en-CA'); 
   const [content, setContent] = useState('');
   const [rating, setRating] = useState(3);
   const [savedToday, setSavedToday] = useState(false);
+  const [rewardMessage, setRewardMessage] = useState<string | null>(null);
 
   useEffect(() => {
     const todayEntry = entries.find(e => e.date === today);
@@ -24,21 +26,41 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
   const handleSubmit = () => {
     if (!content.trim()) return;
 
+    let claimReward = false;
+    const rewardKey = `journal_reward_claimed_${today}`;
+    const alreadyClaimed = localStorage.getItem(rewardKey);
+
+    if (content.length > 10 && !alreadyClaimed) {
+        claimReward = true;
+        localStorage.setItem(rewardKey, 'true');
+        setRewardMessage("+100 FICHAS - TIRO GARANTIDO 🎰");
+        setTimeout(() => setRewardMessage(null), 3000);
+    }
+
+    // @ts-ignore
     onSave({
       id: savedToday ? (entries.find(e => e.date === today)?.id || Date.now().toString()) : Date.now().toString(),
       date: today,
       content,
       rating
-    });
+    }, claimReward);
     setSavedToday(true);
   };
 
   return (
-    <div className="flex flex-col h-full space-y-6 pb-20">
+    <div className="flex flex-col h-full space-y-6 pb-20 relative">
       <header className="mb-2">
         <h2 className="text-3xl font-bold tracking-tighter uppercase mb-1">Diário</h2>
         <p className="text-sm opacity-60">Reflexão diária sobre disciplina.</p>
       </header>
+
+      {rewardMessage && (
+          <div className="absolute top-0 left-0 right-0 z-50 animate-bounce">
+              <div className="bg-yellow-400 text-black font-black text-center py-2 px-4 rounded-xl shadow-xl border-4 border-black uppercase tracking-widest text-sm">
+                  {rewardMessage}
+              </div>
+          </div>
+      )}
 
       <div className="flex-1 flex flex-col space-y-4">
         <div className="space-y-2">
@@ -65,10 +87,13 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
            <label className="text-xs font-bold uppercase opacity-70">Anotações</label>
            <textarea
              className="flex-1 w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-transparent focus:border-black dark:focus:border-white focus:outline-none resize-none transition-colors"
-             placeholder="Como foi seu desempenho hoje? O que você pode melhorar amanhã?"
+             placeholder="Como foi seu desempenho hoje? O que você pode melhorar amanhã? (Mínimo 10 caracteres para recompensa)"
              value={content}
              onChange={(e) => setContent(e.target.value)}
            />
+           <div className="text-right text-[10px] font-bold opacity-40 uppercase">
+              {content.length} caracteres
+           </div>
         </div>
 
         <button

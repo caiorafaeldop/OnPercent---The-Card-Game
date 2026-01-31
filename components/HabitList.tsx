@@ -5,7 +5,7 @@ import { CheckIcon, PlusIcon, TrashIcon } from './Icons';
 interface HabitListProps {
   habits: Habit[];
   onToggle: (habitId: string, date: string) => void;
-  onAdd: (title: string) => void;
+  onAdd: (title: string, difficulty: 'easy' | 'medium' | 'hard') => void;
   onDelete: (id: string) => void;
 }
 
@@ -22,13 +22,15 @@ const getLast7Days = () => {
 
 const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete }) => {
   const [newHabit, setNewHabit] = useState('');
+  const [newDifficulty, setNewDifficulty] = useState<'easy'|'medium'|'hard'>('medium');
   const weekDays = getLast7Days();
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (newHabit.trim()) {
-      onAdd(newHabit);
+      onAdd(newHabit, newDifficulty);
       setNewHabit('');
+      setNewDifficulty('medium');
     }
   };
 
@@ -100,21 +102,39 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
 
       {/* Add Habit Input */}
       <form onSubmit={handleAdd} className="mt-auto pt-4 sticky bottom-0 bg-white dark:bg-black pb-4 z-10 border-t border-gray-100 dark:border-gray-800">
-        <div className="relative">
-          <input
-            type="text"
-            value={newHabit}
-            onChange={(e) => setNewHabit(e.target.value)}
-            placeholder="Novo hábito (ex: Ler 10 páginas)"
-            className="w-full pl-4 pr-12 py-4 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-transparent focus:border-black dark:focus:border-white focus:outline-none transition-all placeholder-gray-400"
-          />
-          <button
-            type="submit"
-            disabled={!newHabit.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black dark:bg-white text-white dark:text-black rounded-lg disabled:opacity-50 transition-transform active:scale-95"
-          >
-            <PlusIcon className="w-5 h-5" />
-          </button>
+        <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
+                {(['easy', 'medium', 'hard'] as const).map((d) => (
+                    <button
+                        key={d}
+                        type="button"
+                        onClick={() => setNewDifficulty(d)}
+                        className={`text-xs px-3 py-1 rounded-full capitalize border transition-colors ${
+                            newDifficulty === d 
+                            ? 'bg-black text-white dark:bg-white dark:text-black border-transparent' 
+                            : 'bg-transparent border-gray-300 text-gray-400'
+                        }`}
+                    >
+                        {d}
+                    </button>
+                ))}
+            </div>
+            <div className="relative">
+            <input
+                type="text"
+                value={newHabit}
+                onChange={(e) => setNewHabit(e.target.value)}
+                placeholder={`Novo hábito (${newDifficulty})`}
+                className="w-full pl-4 pr-12 py-4 bg-gray-50 dark:bg-gray-900 rounded-xl border-2 border-transparent focus:border-black dark:focus:border-white focus:outline-none transition-all placeholder-gray-400"
+            />
+            <button
+                type="submit"
+                disabled={!newHabit.trim()}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black dark:bg-white text-white dark:text-black rounded-lg disabled:opacity-50 transition-transform active:scale-95"
+            >
+                <PlusIcon className="w-5 h-5" />
+            </button>
+            </div>
         </div>
       </form>
     </div>

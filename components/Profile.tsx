@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserState } from '../types';
+import { UserState, Collectible } from '../types';
 import { ACHIEVEMENTS_LIST, LEVEL_THRESHOLDS } from '../services/gamification';
 import { pullGacha, COLLECTIBLES, GACHA_COST, BONUS_CREDITS } from '../services/gacha';
 import { exportData, saveUser } from '../services/storage';
@@ -10,11 +10,13 @@ interface ProfileProps {
   unlockedAchievements: string[];
   onAddCredits: (amount: number) => void;
   onPullGacha: (newItemId: string) => void;
+  onRecordMeal: () => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCredits, onPullGacha }) => {
+const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCredits, onPullGacha, onRecordMeal }) => {
   const [pulling, setPulling] = useState(false);
   const [lastReward, setLastReward] = useState<string | null>(null);
+  const [viewCard, setViewCard] = useState<Collectible | null>(null);
   const [showBackupAlert, setShowBackupAlert] = useState(false);
 
   const nextLevelXP = LEVEL_THRESHOLDS[user.level] || 100000;
@@ -38,16 +40,16 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
     
     setPulling(true);
     setTimeout(() => {
-      const item = pullGacha();
-      onPullGacha(item.id);
-      setLastReward(item.id);
+      const result = pullGacha();
+      if (result) {
+        onPullGacha(result.id);
+        setLastReward(result.id);
+      } else {
+        // Fallback for insufficient funds or error
+      }
       setPulling(false);
       setTimeout(() => setLastReward(null), 3000);
     }, 1000);
-  };
-
-  const handleBonus = (type: string) => {
-    onAddCredits(BONUS_CREDITS);
   };
 
   const handleBackup = () => {
@@ -99,13 +101,46 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
         <div className="text-4xl font-black">{Math.floor(user.credits)} <span className="text-sm font-medium opacity-50">Fichas</span></div>
         
         {lastReward ? (
-           <div className="animate-fade-in py-4 bg-black text-white dark:bg-white dark:text-black rounded-xl border-2 border-yellow-400">
-              <p className="text-xs uppercase opacity-70 mb-1">Você invocou</p>
-              <p className="font-bold text-lg">{COLLECTIBLES.find(c => c.id === lastReward)?.name}</p>
-              <div className="flex justify-center gap-4 mt-2 text-xs">
-                 <span>STR: {COLLECTIBLES.find(c => c.id === lastReward)?.stats.str}</span>
-                 <span>INT: {COLLECTIBLES.find(c => c.id === lastReward)?.stats.int}</span>
-                 <span>AGI: {COLLECTIBLES.find(c => c.id === lastReward)?.stats.agi}</span>
+           <div className="animate-bounce-in py-6 bg-gray-900 text-white rounded-3xl border-4 border-yellow-400 relative overflow-hidden shadow-2xl">
+              {/* Background Glow */}
+              <div className="absolute inset-0 bg-yellow-500/20 animate-pulse"></div>
+              
+              <div className="relative z-10 flex flex-col items-center">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-yellow-300 mb-2 drop-shadow-md">Nova Descoberta</p>
+                
+                {(() => {
+                  const card = COLLECTIBLES.find(c => c.id === lastReward);
+                  return card ? (
+                    <>
+                       <div className="w-48 h-64 rounded-xl border-4 border-white/20 shadow-2xl overflow-hidden mb-4 relative transform hover:scale-105 transition-transform duration-300">
+                          {card.image ? (
+                            <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="w-full h-full bg-gray-800 flex items-center justify-center text-6xl">{card.icon}</div>
+                          )}
+                          {/* Rarity Tag */}
+                          <div className={`
+                            absolute bottom-0 w-full py-1 text-center text-[10px] font-bold uppercase
+                            ${card.rarity === 'legendary' ? 'bg-yellow-500 text-black' : ''}
+                            ${card.rarity === 'epic' ? 'bg-purple-500 text-white' : ''}
+                            ${card.rarity === 'rare' ? 'bg-blue-500 text-white' : ''}
+                            ${card.rarity === 'common' ? 'bg-gray-500 text-white' : ''}
+                          `}>
+                            {card.rarity}
+                          </div>
+                       </div>
+
+                       <h2 className="text-2xl font-black italic tracking-tighter mb-1">{card.name}</h2>
+                       <p className="text-xs opacity-70 max-w-[200px] leading-relaxed mb-4">"{card.description}"</p>
+
+                       <div className="flex justify-center gap-4 text-xs font-mono bg-black/50 p-2 rounded-lg backdrop-blur-sm">
+                         <span className="text-red-400 font-bold">STR {card.stats.str}</span>
+                         <span className="text-blue-400 font-bold">INT {card.stats.int}</span>
+                         <span className="text-green-400 font-bold">AGI {card.stats.agi}</span>
+                       </div>
+                    </>
+                  ) : <p>Erro ao carregar carta...</p>;
+                })()}
               </div>
            </div>
         ) : (
@@ -117,50 +152,121 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
             {pulling ? 'Abrindo...' : `Tentar a Sorte (${GACHA_COST})`}
           </button>
         )}
-        <div className="grid grid-cols-2 gap-2 pt-2 opacity-50 hover:opacity-100 transition-opacity">
-           <button onClick={() => handleBonus('meal')} className="text-[10px] uppercase border p-2 rounded">Refeição (+33)</button>
-           <button onClick={() => handleBonus('interval')} className="text-[10px] uppercase border p-2 rounded">Sem Vícios (+33)</button>
-        </div>
+      </div>
+
+      <div className="p-6 bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 text-center space-y-4 shadow-sm">
+          <h3 className="text-sm font-black uppercase tracking-widest mb-2 flex flex-col items-center">
+             <span>🍱 Nutrition Feed</span>
+             <span className="text-[10px] text-gray-400 font-normal mt-1">Refeições de Hoje</span>
+          </h3>
+
+          <div className="flex justify-center gap-2 mb-4">
+              {[...Array(5)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={`w-4 h-4 rounded-full transition-all duration-300 ${i < (user.mealsToday || 0) ? 'bg-green-500 scale-110 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}
+                  />
+              ))}
+          </div>
+
+          <button 
+            onClick={onRecordMeal}
+            disabled={(user.mealsToday || 0) >= 5}
+            className={`
+               w-full py-4 rounded-2xl font-black uppercase tracking-widest text-lg transition-all relative overflow-hidden group
+               ${(user.mealsToday || 0) >= 5 
+                  ? 'bg-green-500 text-white cursor-default shadow-lg shadow-green-500/20' 
+                  : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 active:scale-95'}
+            `}
+          >
+             {(user.mealsToday || 0) >= 5 ? 'COMBO COMPLETO!' : 'Registrar Refeição (+20)'}
+             
+             {/* Progress Fill Background Effect */}
+             {(user.mealsToday || 0) < 5 && (
+               <div className="absolute bottom-0 left-0 h-1 bg-green-500 transition-all duration-300" style={{ width: `${((user.mealsToday || 0) / 5) * 100}%` }} />
+             )}
+          </button>
+          <p className="text-[10px] opacity-40 uppercase font-bold tracking-wide">
+             {(user.mealsToday || 0)}/5 Registradas • Reset à meia-noite
+          </p>
       </div>
 
       <div>
         <h3 className="text-xs font-bold uppercase mb-4 opacity-50">Inventário de Cartas</h3>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {COLLECTIBLES.filter(c => user.inventory.includes(c.id)).map(item => {
             const isLegendary = item.rarity === 'legendary';
+            const isEpic = item.rarity === 'epic';
             const isRare = item.rarity === 'rare';
-            const isCOTN = item.collection === 'call_of_the_night';
+            
+            // Rarity Styles
+            let borderColor = 'border-gray-500';
+            let shadowColor = 'shadow-gray-500/20';
+            let bgColor = 'bg-gray-900';
+            
+            if (isLegendary) {
+                borderColor = 'border-orange-500';
+                shadowColor = 'shadow-orange-500/40';
+                bgColor = 'bg-orange-950';
+            } else if (isEpic) {
+                borderColor = 'border-purple-500';
+                shadowColor = 'shadow-purple-500/40';
+                bgColor = 'bg-purple-950';
+            } else if (isRare) {
+                borderColor = 'border-blue-500';
+                shadowColor = 'shadow-blue-500/40';
+                bgColor = 'bg-blue-950';
+            }
 
             return (
               <div 
                 key={item.id} 
+                onClick={() => setViewCard(item)}
                 className={`
-                  relative overflow-hidden rounded-xl border-l-4 shadow-sm p-4 flex gap-4 items-center transition-all duration-300
-                  ${isLegendary ? 'border-l-yellow-500 bg-yellow-50 dark:bg-yellow-900/10' : ''}
-                  ${isRare ? 'border-l-purple-500 bg-purple-50 dark:bg-purple-900/10' : ''}
-                  ${!isLegendary && !isRare ? 'border-l-gray-300 bg-white dark:bg-gray-900' : ''}
+                  relative rounded-xl border-2 overflow-hidden flex flex-col shadow-lg transition-transform hover:scale-105 cursor-pointer hover:shadow-2xl
+                  ${borderColor} ${shadowColor} ${bgColor}
                 `}
               >
-                  <div className="text-4xl">{item.icon}</div>
-                  <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-sm truncate">{item.name}</h4>
-                        {isCOTN && <span className="text-[8px] px-1 bg-indigo-500 text-white rounded">COTN</span>}
-                      </div>
-                      <p className="text-[10px] opacity-70 line-clamp-2 italic">{item.description}</p>
-                      
-                      {/* Stats Display */}
-                      <div className="flex gap-3 mt-2 text-[10px] font-mono opacity-80">
-                         <span className="font-bold text-red-600 dark:text-red-400">STR {item.stats.str}</span>
-                         <span className="font-bold text-blue-600 dark:text-blue-400">INT {item.stats.int}</span>
-                         <span className="font-bold text-green-600 dark:text-green-400">AGI {item.stats.agi}</span>
-                       </div>
+                  {/* Image Area */}
+                  <div className="w-full aspect-[2/3] relative">
+                     {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                     ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl bg-black/50">
+                            {item.icon}
+                        </div>
+                     )}
+                     {/* Gradient overlay for text readability */}
+                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                     
+                     <div className="absolute bottom-2 left-2 right-2">
+                         <h4 className="font-bold text-white text-xs leading-tight mb-1 drop-shadow-md">{item.name}</h4>
+                         <div className="flex gap-1">
+                             <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded text-white bg-black/50 backdrop-blur-md border border-white/20`}>{item.rarity}</span>
+                         </div>
+                     </div>
+                  </div>
+
+                  {/* Stats Footer */}
+                  <div className="p-2 bg-black/40 text-[9px] font-mono text-white flex justify-between border-t border-white/10">
+                     <div className="flex flex-col items-center">
+                        <span className="text-red-400 font-bold">STR</span>
+                        <span>{item.stats.str}</span>
+                     </div>
+                     <div className="flex flex-col items-center">
+                        <span className="text-blue-400 font-bold">INT</span>
+                        <span>{item.stats.int}</span>
+                     </div>
+                     <div className="flex flex-col items-center">
+                        <span className="text-green-400 font-bold">AGI</span>
+                        <span>{item.stats.agi}</span>
+                     </div>
                   </div>
               </div>
             )
           })}
           {user.inventory.length === 0 && (
-            <div className="text-center py-8 opacity-30 text-sm">Nenhuma carta coletada.</div>
+            <div className="col-span-full text-center py-8 opacity-30 text-sm">Nenhuma carta coletada.</div>
           )}
         </div>
       </div>
@@ -168,6 +274,50 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
       <div className="mt-8 pt-8 border-t dark:border-gray-800">
         <button onClick={handleBackup} className="text-xs uppercase font-bold text-gray-400 hover:text-black dark:hover:text-white underline">Forçar Backup Manual</button>
       </div>
+      {/* Card Modal */}
+      {viewCard && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setViewCard(null)}>
+             <div className="relative max-w-sm w-full bg-gray-900 rounded-3xl border-4 border-gray-800 p-6 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
+                {/* Glow */}
+                <div className={`absolute inset-0 ${
+                    viewCard.rarity === 'legendary' ? 'bg-orange-500/20' : 
+                    viewCard.rarity === 'epic' ? 'bg-purple-500/20' : 
+                    viewCard.rarity === 'rare' ? 'bg-blue-500/20' : 'bg-gray-500/20'
+                } animate-pulse blur-xl`}></div>
+
+                <div className="relative z-10 flex flex-col items-center text-white">
+                   <div className={`w-64 h-80 rounded-xl border-4 ${
+                       viewCard.rarity === 'legendary' ? 'border-orange-500' : 
+                       viewCard.rarity === 'epic' ? 'border-purple-500' : 
+                       viewCard.rarity === 'rare' ? 'border-blue-500' : 'border-gray-500'
+                   } shadow-2xl overflow-hidden mb-6 relative`}>
+                      <img src={viewCard.image} alt={viewCard.name} className="w-full h-full object-cover" />
+                      <div className="absolute bottom-0 w-full bg-black/60 text-center py-1 text-[10px] font-bold uppercase">{viewCard.rarity}</div>
+                   </div>
+
+                   <h2 className="text-3xl font-black italic tracking-tighter mb-2 text-center">{viewCard.name}</h2>
+                   <p className="text-sm opacity-70 text-center leading-relaxed mb-6 italic">"{viewCard.description}"</p>
+
+                   <div className="flex gap-4 w-full justify-center">
+                      <div className="bg-black/50 p-2 rounded flex flex-col items-center min-w-[60px]">
+                         <span className="text-red-400 font-bold text-xs">STR</span>
+                         <span className="text-xl font-mono">{viewCard.stats.str}</span>
+                      </div>
+                      <div className="bg-black/50 p-2 rounded flex flex-col items-center min-w-[60px]">
+                         <span className="text-blue-400 font-bold text-xs">INT</span>
+                         <span className="text-xl font-mono">{viewCard.stats.int}</span>
+                      </div>
+                      <div className="bg-black/50 p-2 rounded flex flex-col items-center min-w-[60px]">
+                         <span className="text-green-400 font-bold text-xs">AGI</span>
+                         <span className="text-xl font-mono">{viewCard.stats.agi}</span>
+                      </div>
+                   </div>
+                   
+                   <button onClick={() => setViewCard(null)} className="mt-8 text-xs uppercase font-bold text-gray-400 hover:text-white">Fechar</button>
+                </div>
+             </div>
+          </div>
+      )}
     </div>
   );
 };

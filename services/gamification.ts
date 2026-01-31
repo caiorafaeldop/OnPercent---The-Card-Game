@@ -15,9 +15,17 @@ export const calculateLevel = (xp: number): number => {
 };
 
 export const XP_REWARDS = {
-  HABIT_COMPLETE: 10,
+  HABIT_EASY: 10,
+  HABIT_MEDIUM: 35,
+  HABIT_HARD: 80,
   JOURNAL_ENTRY: 15,
   PERFECT_DAY_BONUS: 50,
+};
+
+export const CREDITS_REWARDS = {
+  EASY: 20,
+  MEDIUM: 40,
+  HARD: 60,
 };
 
 export const ACHIEVEMENTS_LIST: Achievement[] = [
@@ -72,6 +80,7 @@ export const ACHIEVEMENTS_LIST: Achievement[] = [
   }
 ];
 
+// ... existing code ...
 export const checkAchievements = (user: UserState, habits: Habit[], journal: JournalEntry[]): string[] => {
   const unlockedIds: string[] = [];
   ACHIEVEMENTS_LIST.forEach(achievement => {
@@ -80,4 +89,92 @@ export const checkAchievements = (user: UserState, habits: Habit[], journal: Jou
     }
   });
   return unlockedIds;
+};
+
+export const calculateCurrentStreak = (completedDates: string[]): number => {
+    if (!completedDates || completedDates.length === 0) return 0;
+    
+    // Sort dates descending (newest first)
+    const sorted = [...completedDates].sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+    
+    // Get today and yesterday strings (YYYY-MM-DD)
+    const today = new Date();
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    const todayStr = today.toISOString().split('T')[0];
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    let streak = 0;
+    let checkDate = new Date();
+    
+    // Check if streak is active (completed today or yesterday)
+    // If last completion was older than yesterday, streak is broken (0) unless we want to be lenient
+    // For "Current Streak", usually if you missed yesterday, it's 0.
+    // However, if you completed today, it counts.
+    
+    const hasToday = sorted.includes(todayStr);
+    const hasYesterday = sorted.includes(yesterdayStr);
+    
+    if (!hasToday && !hasYesterday) return 0;
+
+    // Start checking from today backwards
+    // We construct the "expected" date each iteration
+    let currentCheck = new Date(); // Start today
+    
+    // If user hasn't done today yet, but did yesterday, streak is alive but count starts from yesterday?
+    // Actually simpler: iterate sorted dates and check continuity.
+    
+    // Let's use the robust method:
+    // 1. Normalize all dates to YYYY-MM-DD
+    // 2. Filter unique
+    // 3. Sort DESC
+    
+    const uniqueDates = Array.from(new Set(completedDates)).sort().reverse(); // Newest first
+    if (uniqueDates.length === 0) return 0;
+
+    const lastCompletion = new Date(uniqueDates[0]);
+    const diffToToday = Math.floor((today.getTime() - lastCompletion.getTime()) / (1000 * 3600 * 24));
+    
+    // If gap is > 1 day (e.g. today is Fri, last was Wed. diff=2), streak broken.
+    // Assuming today hasn't ended, if last was yesterday (diff=1), streak alive.
+    // If last was today (diff=0), streak alive.
+    if (diffToToday > 1) return 0; 
+    
+    streak = 1;
+    for (let i = 0; i < uniqueDates.length - 1; i++) {
+        const d1 = new Date(uniqueDates[i]);
+        const d2 = new Date(uniqueDates[i+1]);
+        const diff = Math.floor((d1.getTime() - d2.getTime()) / (1000 * 3600 * 24));
+        
+        if (diff === 1) {
+            streak++;
+        } else {
+            break;
+        }
+    }
+    
+    return streak;
+};
+
+export const calculateBestStreak = (completedDates: string[]): number => {
+    if (!completedDates || completedDates.length === 0) return 0;
+    const sorted = Array.from(new Set(completedDates)).sort(); // Oldest first
+    
+    let maxStreak = 1;
+    let currentStreak = 1;
+    
+    for (let i = 1; i < sorted.length; i++) {
+        const d1 = new Date(sorted[i-1]);
+        const d2 = new Date(sorted[i]);
+        const diff = Math.floor((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24));
+        
+        if (diff === 1) {
+            currentStreak++;
+        } else {
+            currentStreak = 1;
+        }
+        if (currentStreak > maxStreak) maxStreak = currentStreak;
+    }
+    return maxStreak;
 };
