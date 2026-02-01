@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { JournalEntry } from '../types';
 import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
 
@@ -11,6 +11,7 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
   // Dates
   const today = new Date().toLocaleDateString('en-CA');
   const [selectedDate, setSelectedDate] = useState<string>(today);
+  const containerRef = useRef<HTMLDivElement>(null);
   
   // Calendar View State
   const [viewDate, setViewDate] = useState(new Date());
@@ -99,7 +100,10 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
         days.push(
             <button
                 key={dateStr}
-                onClick={() => setSelectedDate(dateStr)}
+                onClick={() => {
+                    setSelectedDate(dateStr);
+                    containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
                 className={`
                     aspect-square rounded-full flex flex-col items-center justify-center text-xs relative
                     ${isSelected 
@@ -129,7 +133,7 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-4 pb-20 relative overflow-y-auto no-scrollbar">
+    <div ref={containerRef} className="flex flex-col h-full space-y-4 pb-20 relative overflow-y-auto no-scrollbar">
       <header className="flex justify-between items-end">
         <div>
             <h2 className="text-3xl font-black tracking-tighter uppercase italic bg-clip-text text-transparent bg-gradient-to-r from-black to-gray-500 dark:from-white dark:to-gray-500 mb-1">Diário</h2>
