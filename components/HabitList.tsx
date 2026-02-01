@@ -120,7 +120,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
               }`} />
 
               <div className="flex justify-between items-center pl-3">
-                <span className="font-bold text-lg leading-none tracking-tight">{habit.title}</span>
+                <span className="font-bold text-base leading-none tracking-tight">{habit.title}</span>
                 <button 
                     onClick={() => onDelete(habit.id)}
                     className="opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity p-2 text-red-500"
