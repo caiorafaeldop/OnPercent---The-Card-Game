@@ -23,6 +23,7 @@ const getLast7Days = () => {
 const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete }) => {
   const [newHabit, setNewHabit] = useState('');
   const [activeTab, setActiveTab] = useState<'easy'|'medium'|'hard'>('medium');
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const weekDays = getLast7Days();
 
   const handleAdd = (e: React.FormEvent) => {
@@ -104,6 +105,14 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
         })}
       </div>
 
+      {/* Invisible Backdrop to close when clicking outside */}
+      {deletingId && (
+        <div 
+            className="fixed inset-0 z-30" 
+            onClick={() => setDeletingId(null)}
+        />
+      )}
+
       <div className="flex-1 overflow-y-auto space-y-6 no-scrollbar px-1">
         {filteredHabits.length === 0 ? (
            <div className="text-center py-20 opacity-40">
@@ -113,6 +122,35 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
         ) : (
           filteredHabits.map((habit) => (
             <div key={habit.id} className="group flex flex-col gap-4 bg-white dark:bg-white/5 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-white/5 relative overflow-hidden transition-all hover:shadow-md">
+              
+              {/* Delete Confirmation Overlay (Inline) */}
+              {deletingId === habit.id && (
+                  <div className="absolute inset-0 z-40 bg-white/95 dark:bg-gray-900/95 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-200">
+                      <p className="text-xs font-black uppercase text-red-500 mb-3">Tem certeza?</p>
+                      <div className="flex gap-3 items-center">
+                          <button 
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  onDelete(habit.id);
+                                  setDeletingId(null);
+                              }}
+                              className="px-4 py-1.5 rounded-lg text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 text-xs font-bold transition-colors"
+                          >
+                              Excluir
+                          </button>
+                          <button 
+                              onClick={(e) => {
+                                  e.stopPropagation();
+                                  setDeletingId(null);
+                              }}
+                              className="px-6 py-1.5 rounded-lg bg-black dark:bg-white text-white dark:text-black text-xs font-black hover:scale-105 transition-transform shadow-lg"
+                          >
+                              Cancelar
+                          </button>
+                      </div>
+                  </div>
+              )}
+
               {/* Difficulaty Indicator Stripe */}
               <div className={`absolute left-0 top-0 bottom-0 w-1 ${
                   habit.difficulty === 'hard' ? 'bg-red-500' : 
@@ -122,7 +160,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
               <div className="flex justify-between items-center pl-3">
                 <span className="font-bold text-base leading-none tracking-tight">{habit.title}</span>
                 <button 
-                    onClick={() => onDelete(habit.id)}
+                    onClick={() => setDeletingId(habit.id)}
                     className="opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity p-2 text-red-500"
                 >
                     <TrashIcon className="w-4 h-4" />

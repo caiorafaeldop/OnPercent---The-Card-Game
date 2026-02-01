@@ -107,7 +107,7 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
                     relative group overflow-hidden rounded-[2.5rem] p-1 
                     bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-2xl
                     mb-12 shrink-0 z-10 select-none
-                    ${user.credits >= GACHA_COST ? 'cursor-pointer active:scale-[0.98] hover:shadow-purple-500/20' : 'opacity-80 grayscale'}
+                    ${user.credits >= GACHA_COST ? 'cursor-pointer active:scale-[0.98] hover:shadow-purple-500/20' : ''}
                 `}
             >
                 <div className="bg-black/95 dark:bg-gray-950 backdrop-blur-xl rounded-[2.2rem] p-8 relative overflow-hidden transition-colors group-active:bg-black/90">
@@ -133,12 +133,12 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
                         {/* Interactive Prompt - Substitui o Botão */}
                         <div className="mt-8 text-center relative z-20">
                             <div className={`
-                                inline-block px-6 py-2 rounded-full font-black uppercase tracking-widest text-[10px] border border-white/10
+                                inline-block px-6 py-2 rounded-full font-black uppercase tracking-widest text-[10px] border border-white/10 transition-colors
                                 ${user.credits >= GACHA_COST 
                                     ? 'bg-white text-black animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.5)]' 
-                                    : 'bg-gray-800 text-gray-500'}
+                                    : 'bg-gray-800 text-gray-400 opacity-50 cursor-default'}
                             `}>
-                                {user.credits >= GACHA_COST ? 'Toque para Nova Carta (100)' : 'Fragmentos Insuficientes'}
+                                {user.credits >= GACHA_COST ? 'Toque para Nova Carta (100)' : `Faltam ${Math.ceil(GACHA_COST - user.credits)} Fragmentos`}
                             </div>
                              <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-2 opacity-50">
                                 Sintonize o rádio para encontrar
