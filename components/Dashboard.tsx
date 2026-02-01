@@ -30,11 +30,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
     ? habits 
     : habits.filter(h => h.id === selectedHabitId);
 
-  // ... (Streak stats code remains same, omitted for brevity in replacement if not touched, but since it's a replace block, I must be careful. 
-  // Actually, I should use multi_replace or ensure I cover the whole file correctly if I'm replacing large chunks. 
-  // Let's stick to replacing the specific parts or the whole component logic if easier. 
-  // Given the complexity of mixing state and render, I will replace the component body logic.)
-
   // Calculate Streak Stats - KEEPING AS IS
   const currentStreak = selectedHabitId !== 'all' 
      ? calculateCurrentStreak(filteredHabits[0]?.completedDates || []) 
@@ -55,7 +50,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
   const handleNextMonth = () => setViewDate(new Date(currentYear, currentMonth + 1, 1));
 
   const getDayStatus = (day: number) => {
-    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    // FIX: Use local date construction to match HabitList logic (YYYY-MM-DD)
+    // Create date object for specific day, then format to YYYY-MM-DD local
+    const dateObj = new Date(currentYear, currentMonth, day);
+    const dateStr = dateObj.toLocaleDateString('en-CA'); // YYYY-MM-DD
     
     // Check if ANY filtered habit was completed on this day
     const completedCount = filteredHabits.filter(h => h.completedDates.includes(dateStr)).length;
@@ -69,10 +67,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
     return 'some';
   };
   
-  // ... (Gacha Stats Logic remains same)
-  // ... (Rarity Stats Logic remains same)
   const getRarityStats = () => {
-    // ... (logic from original file)
     const stats: Record<string, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
     inventory.forEach(id => {
        const item = COLLECTIBLES.find(c => c.id === id);
@@ -98,7 +93,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
         </h2>
       </header>
 
-       {/* ... (Header Stats - keeping same) */}
+       {/* Header Stats */}
       <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-2xl flex flex-col justify-center items-center shadow-sm">
              <span className="text-xs uppercase font-bold text-gray-400 tracking-wider">Nível</span>
@@ -184,7 +179,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
                         key={day} 
                         onClick={() => {
                             if (selectedHabitId !== 'all') {
-                                const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                // FIX: Use local date construction
+                                const dateObj = new Date(currentYear, currentMonth, day);
+                                const dateStr = dateObj.toLocaleDateString('en-CA');
                                 onToggle(selectedHabitId, dateStr);
                             }
                         }}
@@ -281,7 +278,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
                        
                        {Array(new Date(historyDate.getFullYear(), historyDate.getMonth() + 1, 0).getDate()).fill(null).map((_, i) => {
                            const day = i + 1;
-                           const dateStr = `${historyDate.getFullYear()}-${String(historyDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                           const dateObj = new Date(historyDate.getFullYear(), historyDate.getMonth(), day);
+                           const dateStr = dateObj.toLocaleDateString('en-CA');
                            const count = user.mealHistory?.[dateStr] || 0;
                            const isToday = dateStr === new Date().toLocaleDateString('en-CA');
                            
@@ -313,7 +311,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
                           <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-xl w-full max-w-[200px] border border-gray-100 dark:border-gray-700" onClick={e => e.stopPropagation()}>
                               <div className="text-center mb-3">
                                   <h4 className="text-[10px] font-bold uppercase opacity-50">Editar Refeições</h4>
-                                  <p className="text-xs font-bold">{new Date(editingDate).toLocaleDateString('pt-BR', {day: 'numeric', month: 'short'})}</p>
+                                  <p className="text-xs font-bold">{new Date().toLocaleDateString('pt-BR', {day: 'numeric', month: 'short'})}</p>
                               </div>
                               <div className="grid grid-cols-3 gap-2">
                                   {[0,1,2,3,4,5].map(val => (
