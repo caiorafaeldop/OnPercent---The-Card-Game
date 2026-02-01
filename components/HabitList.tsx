@@ -22,21 +22,25 @@ const getLast7Days = () => {
 
 const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete }) => {
   const [newHabit, setNewHabit] = useState('');
-  const [newDifficulty, setNewDifficulty] = useState<'easy'|'medium'|'hard'>('medium');
+  const [activeTab, setActiveTab] = useState<'easy'|'medium'|'hard'>('medium');
   const weekDays = getLast7Days();
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
     if (newHabit.trim()) {
-      onAdd(newHabit, newDifficulty);
+      onAdd(newHabit, activeTab);
       setNewHabit('');
-      setNewDifficulty('medium');
     }
   };
 
-  const formatDateKey = (date: Date) => date.toISOString().split('T')[0];
+  // FIX: Use local time YYYY-MM-DD instead of UTC to prevent timezone shifts
+  const formatDateKey = (date: Date) => {
+      const offset = date.getTimezoneOffset();
+      const localDate = new Date(date.getTime() - (offset * 60 * 1000));
+      return localDate.toISOString().split('T')[0];
+  };
+  
   const formatDisplayDay = (date: Date) => date.toLocaleDateString('pt-BR', { weekday: 'narrow' }).toUpperCase();
-  const formatDisplayDate = (date: Date) => date.getDate();
 
   const getStreakColor = (streak: number) => {
       // Palette: Light -> Dark/Neon (Histórias da Noite Theme)
@@ -52,6 +56,8 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
       return 'bg-gray-100 dark:bg-gray-800 text-transparent scale-75 hover:scale-90 opacity-50 hover:opacity-100'; // Default (0)
   };
 
+  const filteredHabits = habits.filter(h => (h.difficulty || 'medium') === activeTab);
+
   return (
     <div className="flex flex-col h-full space-y-6 pb-20">
       <header className="flex justify-between items-center mb-2 px-1">
@@ -64,7 +70,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
       </header>
 
       {/* Week Header */}
-      <div className="grid grid-cols-7 gap-2 mb-4 px-1">
+      <div className="grid grid-cols-7 gap-2 px-1">
          {weekDays.map((day) => (
            <div key={day.toString()} className="flex flex-col items-center justify-center space-y-1">
              <span className="text-[9px] font-black uppercase text-gray-400">{formatDisplayDay(day)}</span>
@@ -72,14 +78,40 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
          ))}
       </div>
 
+      {/* Difficulty Tabs */}
+      <div className="flex p-1 bg-gray-100 dark:bg-gray-900 rounded-full mx-1">
+        {(['easy', 'medium', 'hard'] as const).map((tab) => {
+            const isActive = activeTab === tab;
+            let activeColor = '';
+            if (tab === 'easy') activeColor = 'bg-green-400 text-black shadow-green-400/30';
+            if (tab === 'medium') activeColor = 'bg-yellow-400 text-black shadow-yellow-400/30';
+            if (tab === 'hard') activeColor = 'bg-red-500 text-white shadow-red-500/30';
+
+            return (
+                <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`
+                        flex-1 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all
+                        ${isActive 
+                            ? `${activeColor} shadow-lg scale-100` 
+                            : 'text-gray-400 hover:text-black dark:hover:text-white'}
+                    `}
+                >
+                    {tab}
+                </button>
+            )
+        })}
+      </div>
+
       <div className="flex-1 overflow-y-auto space-y-6 no-scrollbar px-1">
-        {habits.length === 0 ? (
+        {filteredHabits.length === 0 ? (
            <div className="text-center py-20 opacity-40">
-             <p className="text-lg font-bold">Nenhum hábito rastreado</p>
-             <p className="text-xs uppercase tracking-widest mt-2">Comece sua jornada hoje</p>
+             <p className="text-lg font-bold">Nenhum hábito {activeTab}</p>
+             <p className="text-xs uppercase tracking-widest mt-2">Crie um novo abaixo</p>
            </div>
         ) : (
-          habits.map((habit) => (
+          filteredHabits.map((habit) => (
             <div key={habit.id} className="group flex flex-col gap-4 bg-white dark:bg-white/5 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-white/5 relative overflow-hidden transition-all hover:shadow-md">
               {/* Difficulaty Indicator Stripe */}
               <div className={`absolute left-0 top-0 bottom-0 w-1 ${
@@ -146,31 +178,13 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
       {/* Add Habit Input */}
       <form onSubmit={handleAdd} className="mt-auto px-1 pt-4 pb-2">
         <div className="bg-gray-100 dark:bg-gray-900 rounded-[2rem] p-1.5 flex flex-col gap-2 shadow-inner border border-white/50 dark:border-black/50"> 
-            {/* Difficulty Toggle */}
-            <div className="flex justify-center gap-1 pt-2 pb-1">
-                {(['easy', 'medium', 'hard'] as const).map((d) => (
-                    <button
-                        key={d}
-                        type="button"
-                        onClick={() => setNewDifficulty(d)}
-                        className={`
-                            text-[10px] uppercase font-black px-4 py-1.5 rounded-full transition-all
-                            ${newDifficulty === d 
-                                ? 'bg-white dark:bg-gray-800 shadow-sm scale-110 text-black dark:text-white' 
-                                : 'text-gray-400 hover:text-gray-600'}
-                        `}
-                    >
-                        {d}
-                    </button>
-                ))}
-            </div>
-
+            
             <div className="relative flex items-center">
                 <input
                     type="text"
                     value={newHabit}
                     onChange={(e) => setNewHabit(e.target.value)}
-                    placeholder="Adicionar novo hábito..."
+                    placeholder={`Novo hábito...`}
                     className="w-full pl-6 pr-14 py-4 bg-transparent text-sm font-bold focus:outline-none placeholder-gray-400/70"
                 />
                 <button
