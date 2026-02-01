@@ -102,7 +102,7 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
                 key={dateStr}
                 onClick={() => {
                     setSelectedDate(dateStr);
-                    containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                    fastScrollToTop();
                 }}
                 className={`
                     aspect-square rounded-full flex flex-col items-center justify-center text-xs relative
@@ -130,6 +130,32 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
       if (selectedDate === today) return "Hoje";
       const [y, m, d] = selectedDate.split('-').map(Number);
       return new Date(y, m - 1, d).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
+  };
+
+  // Custom fast smooth scroll (approx 250ms)
+  const fastScrollToTop = () => {
+    const element = containerRef.current;
+    if (!element) return;
+    
+    const start = element.scrollTop;
+    const startTime = performance.now();
+    const duration = 250; // ms
+
+    const animate = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Ease out cubic
+        const ease = 1 - Math.pow(1 - progress, 3);
+        
+        element.scrollTop = start * (1 - ease);
+
+        if (progress < 1) {
+            requestAnimationFrame(animate);
+        }
+    };
+
+    requestAnimationFrame(animate);
   };
 
   return (
