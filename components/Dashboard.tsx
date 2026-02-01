@@ -92,6 +92,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
 
   return (
     <div className="flex flex-col h-full space-y-8 pb-20 overflow-y-auto no-scrollbar">
+      <header className="flex justify-between items-center mb-2 px-1">
+        <h2 className="text-3xl font-black tracking-tighter uppercase italic bg-clip-text text-transparent bg-gradient-to-r from-black to-gray-500 dark:from-white dark:to-gray-500">
+            Dashboard
+        </h2>
+      </header>
+
        {/* ... (Header Stats - keeping same) */}
       <div className="grid grid-cols-2 gap-4">
           <div className="bg-gray-100 dark:bg-gray-900 p-4 rounded-2xl flex flex-col justify-center items-center shadow-sm">
@@ -227,7 +233,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
                   : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 active:scale-95'}
             `}
           >
-             {(user.mealsToday || 0) >= 5 ? 'COMBO COMPLETO!' : 'Registrar Refeição (+20)'}
+             {(user.mealsToday || 0) >= 5 ? 'COMBO COMPLETO!' : '+1 Refeição (+20)'}
              
              {/* Progress Fill Background Effect */}
              {(user.mealsToday || 0) < 5 && (

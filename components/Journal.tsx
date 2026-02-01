@@ -132,7 +132,7 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
     <div className="flex flex-col h-full space-y-4 pb-20 relative overflow-y-auto no-scrollbar">
       <header className="flex justify-between items-end">
         <div>
-            <h2 className="text-3xl font-bold tracking-tighter uppercase mb-1">Diário</h2>
+            <h2 className="text-3xl font-black tracking-tighter uppercase italic bg-clip-text text-transparent bg-gradient-to-r from-black to-gray-500 dark:from-white dark:to-gray-500 mb-1">Diário</h2>
             <p className="text-sm opacity-60">Reflexão diária.</p>
         </div>
         <div className="text-right">
@@ -173,7 +173,7 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
 
         <div className="flex-1 flex flex-col space-y-2">
            <textarea
-             className="flex-1 w-full p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-transparent focus:border-black dark:focus:border-white focus:outline-none resize-none transition-colors"
+             className="flex-1 w-full p-4 min-h-[300px] rounded-xl bg-gray-50 dark:bg-gray-900 border-2 border-transparent focus:border-black dark:focus:border-white focus:outline-none resize-none transition-colors"
              placeholder={selectedDate === today ? "Escreva sobre seu dia..." : `Entrada de ${displayDateHeader()}...`}
              value={content}
              onChange={(e) => setContent(e.target.value)}

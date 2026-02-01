@@ -59,15 +59,14 @@ const GachaReveal: React.FC<GachaRevealProps> = ({ card, onComplete }) => {
                 ) : (
                     <motion.div
                         className="w-full h-full relative"
-                        initial={{ scale: 0, y: 500, rotateX: 60 }}
+                        initial={{ scale: 0, opacity: 0 }}
                         animate={{ 
-                            scale: stage === 'enter' ? 0.8 : 1,
-                            y: stage === 'enter' ? 200 : 0,
-                            rotateX: stage === 'enter' ? 45 : 0,
+                            scale: stage === 'enter' ? 0.9 : 1,
+                            opacity: 1,
                             rotateY: (stage === 'flip' || stage === 'reveal') ? 180 : 0,
                         }}
                         transition={{
-                            type: 'spring', damping: 20
+                            type: 'spring', damping: 15, stiffness: 100
                         }}
                         style={{ transformStyle: 'preserve-3d' }}
                         onAnimationComplete={() => {

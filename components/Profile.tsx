@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UserState, Collectible } from '../types';
 import { ACHIEVEMENTS_LIST, LEVEL_THRESHOLDS } from '../services/gamification';
 import { pullGacha, COLLECTIBLES, GACHA_COST, BONUS_CREDITS } from '../services/gacha';
-import { exportData, saveUser, importData } from '../services/storage';
+import { exportData, saveUser } from '../services/storage';
 import { BookIcon, TrophyIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
 import CollectionModal from './CollectionModal';
 import GachaReveal from './GachaReveal';
@@ -22,11 +22,6 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
   const [showCollection, setShowCollection] = useState(false);
   const [revealedCard, setRevealedCard] = useState<Collectible | null>(null);
   const [showReveal, setShowReveal] = useState(false);
-
-  // Reset/Restore State
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-  const [showRestoreInput, setShowRestoreInput] = useState(false);
-  const [restoreJson, setRestoreJson] = useState('');
 
   const nextLevelXP = LEVEL_THRESHOLDS[user.level] || 100000;
   const currentLevelXP = LEVEL_THRESHOLDS[user.level - 1] || 0;
@@ -78,28 +73,6 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
       saveUser(updatedUser);
       setShowBackupAlert(false);
     });
-  };
-
-  const handleResetApp = () => {
-      // 1. Copy Data
-      const data = exportData();
-      navigator.clipboard.writeText(data).then(() => {
-          // 2. Wipe
-          localStorage.clear();
-          // 3. Reload
-          window.location.reload();
-      });
-  };
-
-  const handleRestore = () => {
-      if (!restoreJson.trim()) return;
-      const success = importData(restoreJson);
-      if (success) {
-          alert("Progresso restaurado com sucesso!");
-          window.location.reload();
-      } else {
-          alert("Erro ao ler os dados. Verifique o JSON.");
-      }
   };
 
   return (
@@ -215,7 +188,6 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
                     const isLegendary = item.rarity === 'legendary';
                     const isEpic = item.rarity === 'epic';
                     const isRare = item.rarity === 'rare';
-                    const isCommon = item.rarity === 'common';
                     
                     // Rarity Styles & Duplicates
                     const duplicateCount = user.inventory.filter(id => id === item.id).length;
@@ -309,25 +281,6 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
                 )}
                 </div>
             </div>
-            
-            <div className="mt-8 pt-8 border-t dark:border-gray-800 space-y-4">
-                <button onClick={handleBackup} className="w-full text-xs uppercase font-bold text-gray-400 hover:text-black dark:hover:text-white underline block text-center">Forçar Backup Manual</button>
-                
-                <div className="flex gap-2 justify-center pt-4">
-                    <button 
-                        onClick={() => setShowResetConfirm(true)} 
-                        className="text-[10px] uppercase font-bold text-red-500 border border-red-500/30 hover:bg-red-500 hover:text-white px-4 py-2 rounded-lg transition-colors"
-                    >
-                        Resetar App
-                    </button>
-                    <button 
-                        onClick={() => setShowRestoreInput(true)} 
-                        className="text-[10px] uppercase font-bold text-blue-500 border border-blue-500/30 hover:bg-blue-500 hover:text-white px-4 py-2 rounded-lg transition-colors"
-                    >
-                        Restaurar Progresso
-                    </button>
-                </div>
-            </div>
       </div>
 
       {/* Card Modal */}
@@ -352,42 +305,6 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
                     <button onClick={() => setViewCard(null)} className="mt-2 text-xs uppercase font-bold text-gray-400 hover:text-white">Fechar</button>
                 </div>
              </div>
-          </div>
-      )}
-
-      {/* Reset Confirmation Modal */}
-      {showResetConfirm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-              <div className="bg-white dark:bg-gray-900 p-8 rounded-3xl max-w-xs w-full text-center space-y-6 shadow-2xl border border-red-500/30">
-                  <div>
-                    <h3 className="text-xl font-black uppercase text-red-500 mb-2">Perigo!</h3>
-                    <p className="text-sm opacity-70">Você tem certeza que deseja RESETAR tudo? Todo o progresso será perdido para sempre.</p>
-                    <p className="text-xs mt-2 text-gray-400 font-bold">(Seus dados serão copiados para a área de transferência antes de apagar)</p>
-                  </div>
-                  <div className="flex gap-2 font-bold justify-center">
-                      <button onClick={() => setShowResetConfirm(false)} className="px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200">Cancelar</button>
-                      <button onClick={handleResetApp} className="px-6 py-3 rounded-xl bg-red-500 text-white hover:bg-red-600 shadow-lg shadow-red-500/30">SIM, RESETAR</button>
-                  </div>
-              </div>
-          </div>
-      )}
-
-      {/* Restore Progress Modal */}
-      {showRestoreInput && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
-              <div className="bg-white dark:bg-gray-900 p-6 rounded-3xl max-w-sm w-full space-y-4 shadow-2xl border border-blue-500/30">
-                  <h3 className="text-lg font-black uppercase text-blue-500 text-center">Restaurar Backup</h3>
-                  <textarea 
-                    value={restoreJson}
-                    onChange={e => setRestoreJson(e.target.value)}
-                    placeholder="Cole o código JSON do seu backup aqui..."
-                    className="w-full h-32 bg-gray-100 dark:bg-gray-800 rounded-xl p-3 text-xs font-mono focus:outline-none border-2 border-transparent focus:border-blue-500 resize-none"
-                  />
-                  <div className="flex gap-2 font-bold justify-center">
-                      <button onClick={() => setShowRestoreInput(false)} className="px-6 py-3 rounded-xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 text-xs uppercase">Cancelar</button>
-                      <button onClick={handleRestore} className="px-6 py-3 rounded-xl bg-blue-500 text-white hover:bg-blue-600 shadow-lg shadow-blue-500/30 text-xs uppercase">Restaurar</button>
-                  </div>
-              </div>
           </div>
       )}
 

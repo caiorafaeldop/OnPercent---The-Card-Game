@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tab } from '../types';
-import { ListIcon, CalendarIcon, BookIcon, TrophyIcon, MoonIcon, SunIcon } from './Icons';
+import { ListIcon, CalendarIcon, BookIcon, TrophyIcon, MoonIcon, SunIcon, SettingsIcon } from './Icons';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -8,9 +8,10 @@ interface LayoutProps {
   onTabChange: (tab: Tab) => void;
   isDark: boolean;
   toggleTheme: () => void;
+  onOpenSettings: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDark, toggleTheme }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDark, toggleTheme, onOpenSettings }) => {
   const navItems: { id: Tab; icon: React.ReactNode; label: string }[] = [
     { id: 'habits', icon: <ListIcon className="w-6 h-6" />, label: 'Hábitos' },
     { id: 'dashboard', icon: <CalendarIcon className="w-6 h-6" />, label: 'Dashboard' },
@@ -21,11 +22,22 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDar
   return (
     <div className="h-screen w-full overflow-hidden flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors duration-300">
       
-      {/* Top Bar for Theme Toggle */}
-      <div className="absolute top-0 right-0 p-4 z-50">
+      {/* Top Bar for Theme Toggle and Settings */}
+      <div className="absolute top-0 right-0 p-4 z-50 flex gap-2">
+         {/* Settings Button */}
+         <button 
+          onClick={onOpenSettings}
+          className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white transition-all active:scale-95"
+          title="Configurações"
+        >
+          <SettingsIcon className="w-5 h-5" />
+        </button>
+
+        {/* Theme Toggle */}
         <button 
           onClick={toggleTheme}
           className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white transition-all active:scale-95"
+          title="Alternar Tema"
         >
           {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
         </button>
