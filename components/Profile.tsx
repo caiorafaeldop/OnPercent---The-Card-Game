@@ -3,23 +3,25 @@ import { UserState, Collectible } from '../types';
 import { ACHIEVEMENTS_LIST, LEVEL_THRESHOLDS } from '../services/gamification';
 import { pullGacha, COLLECTIBLES, GACHA_COST, BONUS_CREDITS } from '../services/gacha';
 import { exportData, saveUser } from '../services/storage';
-import { BookIcon, TrophyIcon } from './Icons';
+import { BookIcon, TrophyIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
 import CollectionModal from './CollectionModal';
+import GachaReveal from './GachaReveal';
+import HolographicCard from './HolographicCard';
 
 interface ProfileProps {
   user: UserState;
   unlockedAchievements: string[];
   onAddCredits: (amount: number) => void;
   onPullGacha: (newItemId: string) => void;
-  onRecordMeal: () => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCredits, onPullGacha, onRecordMeal }) => {
-  const [pulling, setPulling] = useState(false);
+const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCredits, onPullGacha }) => {
   const [lastReward, setLastReward] = useState<string | null>(null);
   const [viewCard, setViewCard] = useState<Collectible | null>(null);
   const [showBackupAlert, setShowBackupAlert] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
+  const [revealedCard, setRevealedCard] = useState<Collectible | null>(null);
+  const [showReveal, setShowReveal] = useState(false);
 
   const nextLevelXP = LEVEL_THRESHOLDS[user.level] || 100000;
   const currentLevelXP = LEVEL_THRESHOLDS[user.level - 1] || 0;
@@ -40,18 +42,26 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
   const handlePull = () => {
     if (user.credits < GACHA_COST) return;
     
-    setPulling(true);
-    setTimeout(() => {
-      const result = pullGacha();
-      if (result) {
-        onPullGacha(result.id);
-        setLastReward(result.id);
-      } else {
-        // Fallback for insufficient funds or error
+    // Find the result immediately for the reveal component
+    const result = pullGacha();
+    if (result) {
+        const card = COLLECTIBLES.find(c => c.id === result.id);
+        if (card) {
+            setRevealedCard(card);
+            setShowReveal(true);
+        }
+    }
+  };
+
+  const handleRevealComplete = () => {
+      if (revealedCard) {
+          onPullGacha(revealedCard.id);
+          setLastReward(revealedCard.id);
+          setShowReveal(false);
+          setRevealedCard(null);
+          // Highlight
+          setTimeout(() => setLastReward(null), 5000);
       }
-      setPulling(false);
-      setTimeout(() => setLastReward(null), 3000);
-    }, 1000);
   };
 
   const handleBackup = () => {
@@ -66,265 +76,237 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
   };
 
   return (
-    <div className="flex flex-col h-full space-y-8 pb-20 overflow-y-auto no-scrollbar">
+    <div className="flex flex-col h-full overflow-y-auto no-scrollbar pb-32">
        
-       <header className="text-center mt-4">
-        <div className="w-24 h-24 bg-black dark:bg-white text-white dark:text-black mx-auto rounded-full flex items-center justify-center text-3xl font-black mb-4 shadow-xl relative">
-          {user.level}
-          <div className="absolute -bottom-2 bg-gray-200 dark:bg-gray-800 text-black dark:text-white text-[10px] px-2 py-1 rounded-full border border-white dark:border-black font-bold uppercase">
-             {user.name}
-          </div>
-        </div>
-      </header>
+       <div className="px-1 pt-4">
+            {showBackupAlert && (
+                <div className="bg-red-500 text-white p-4 rounded-xl shadow-lg animate-pulse mb-6">
+                <div className="flex justify-between items-center mb-2">
+                    <h3 className="font-bold uppercase text-xs">⚠️ Backup Necessário</h3>
+                    <span className="text-[10px] opacity-80">Domingo/Quarta</span>
+                </div>
+                <p className="text-xs mb-3">Não confie na sorte. Seus dados estão apenas neste dispositivo.</p>
+                <button onClick={handleBackup} className="w-full bg-white text-red-500 font-bold text-xs py-2 rounded-lg uppercase tracking-wider">Gerar & Enviar Email</button>
+                </div>
+            )}
 
-      {showBackupAlert && (
-        <div className="bg-red-500 text-white p-4 rounded-xl shadow-lg animate-pulse">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="font-bold uppercase text-xs">⚠️ Backup Necessário</h3>
-            <span className="text-[10px] opacity-80">Domingo/Quarta</span>
-          </div>
-          <p className="text-xs mb-3">Não confie na sorte. Seus dados estão apenas neste dispositivo.</p>
-          <button onClick={handleBackup} className="w-full bg-white text-red-500 font-bold text-xs py-2 rounded-lg uppercase tracking-wider">Gerar & Enviar Email</button>
-        </div>
-      )}
+            <div className="space-y-2 mb-8">
+                <div className="flex justify-between text-xs font-bold uppercase opacity-60">
+                <span>Nível {user.level}</span>
+                <span>{user.xp} / {nextLevelXP} XP</span>
+                </div>
+                <div className="h-4 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
+                <div className="h-full bg-black dark:bg-white transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
+                </div>
+            </div>
 
-      <div className="space-y-2">
-        <div className="flex justify-between text-xs font-bold uppercase opacity-60">
-          <span>Nível {user.level}</span>
-          <span>{user.xp} / {nextLevelXP} XP</span>
-        </div>
-        <div className="h-4 bg-gray-100 dark:bg-gray-900 rounded-full overflow-hidden">
-          <div className="h-full bg-black dark:bg-white transition-all duration-1000 ease-out" style={{ width: `${progress}%` }} />
-        </div>
-      </div>
-
-      <div className="p-6 bg-gray-50 dark:bg-gray-900 rounded-3xl border border-gray-100 dark:border-gray-800 text-center space-y-4">
-        <h3 className="text-sm font-black uppercase tracking-widest flex justify-center items-center gap-2"><span>🎰 Gacha</span></h3>
-        <div className="text-4xl font-black">{Math.floor(user.credits)} <span className="text-sm font-medium opacity-50">Fichas</span></div>
-        
-        {lastReward ? (
-           <div className="animate-bounce-in py-6 bg-gray-900 text-white rounded-3xl border-4 border-yellow-400 relative overflow-hidden shadow-2xl">
-              {/* Background Glow */}
-              <div className="absolute inset-0 bg-yellow-500/20 animate-pulse"></div>
-              
-              <div className="relative z-10 flex flex-col items-center">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-yellow-300 mb-2 drop-shadow-md">Nova Descoberta</p>
-                
-                {(() => {
-                  const card = COLLECTIBLES.find(c => c.id === lastReward);
-                  return card ? (
-                    <>
-                       <div className="w-48 h-64 rounded-xl border-4 border-white/20 shadow-2xl overflow-hidden mb-4 relative transform hover:scale-105 transition-transform duration-300">
-                          {card.image ? (
-                            <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-gray-800 flex items-center justify-center text-6xl">{card.icon}</div>
-                          )}
-                          {/* Rarity Tag */}
-                          <div className={`
-                            absolute bottom-0 w-full py-1 text-center text-[10px] font-bold uppercase
-                            ${card.rarity === 'legendary' ? 'bg-yellow-500 text-black' : ''}
-                            ${card.rarity === 'epic' ? 'bg-purple-500 text-white' : ''}
-                            ${card.rarity === 'rare' ? 'bg-blue-500 text-white' : ''}
-                            ${card.rarity === 'common' ? 'bg-gray-500 text-white' : ''}
-                          `}>
-                            {card.rarity}
-                          </div>
-                       </div>
-
-                       <h2 className="text-2xl font-black italic tracking-tighter mb-1">{card.name}</h2>
-                       <p className="text-xs opacity-70 max-w-[200px] leading-relaxed mb-4">"{card.description}"</p>
-
-                       <div className="flex justify-center gap-4 text-xs font-mono bg-black/50 p-2 rounded-lg backdrop-blur-sm">
-                         <span className="text-red-400 font-bold">STR {card.stats.str}</span>
-                         <span className="text-blue-400 font-bold">INT {card.stats.int}</span>
-                         <span className="text-green-400 font-bold">AGI {card.stats.agi}</span>
-                       </div>
-                    </>
-                  ) : <p>Erro ao carregar carta...</p>;
-                })()}
-              </div>
-           </div>
-        ) : (
-          <button 
-            onClick={handlePull}
-            disabled={user.credits < GACHA_COST || pulling}
-            className={`w-full py-4 rounded-xl font-bold uppercase tracking-widest transition-all ${user.credits >= GACHA_COST ? 'bg-black text-white dark:bg-white dark:text-black active:scale-95 shadow-lg' : 'bg-gray-200 dark:bg-gray-800 text-gray-400 cursor-not-allowed'}`}
-          >
-            {pulling ? 'Abrindo...' : `Tentar a Sorte (${GACHA_COST})`}
-          </button>
-        )}
-      </div>
-
-      <div className="p-6 bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 text-center space-y-4 shadow-sm">
-          <h3 className="text-sm font-black uppercase tracking-widest mb-2 flex flex-col items-center">
-             <span>🍱 Nutrition Feed</span>
-             <span className="text-[10px] text-gray-400 font-normal mt-1">Refeições de Hoje</span>
-          </h3>
-
-          <div className="flex justify-center gap-2 mb-4">
-              {[...Array(5)].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className={`w-4 h-4 rounded-full transition-all duration-300 ${i < (user.mealsToday || 0) ? 'bg-green-500 scale-110 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}
-                  />
-              ))}
-          </div>
-
-          <button 
-            onClick={onRecordMeal}
-            disabled={(user.mealsToday || 0) >= 5}
-            className={`
-               w-full py-4 rounded-2xl font-black uppercase tracking-widest text-lg transition-all relative overflow-hidden group
-               ${(user.mealsToday || 0) >= 5 
-                  ? 'bg-green-500 text-white cursor-default shadow-lg shadow-green-500/20' 
-                  : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 active:scale-95'}
-            `}
-          >
-             {(user.mealsToday || 0) >= 5 ? 'COMBO COMPLETO!' : 'Registrar Refeição (+20)'}
-             
-             {/* Progress Fill Background Effect */}
-             {(user.mealsToday || 0) < 5 && (
-               <div className="absolute bottom-0 left-0 h-1 bg-green-500 transition-all duration-300" style={{ width: `${((user.mealsToday || 0) / 5) * 100}%` }} />
-             )}
-          </button>
-          <p className="text-[10px] opacity-40 uppercase font-bold tracking-wide">
-             {(user.mealsToday || 0)}/5 Registradas • Reset à meia-noite
-          </p>
-      </div>
-
-      <div>
-        <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xs font-bold uppercase opacity-50">Inventário de Cartas</h3>
-            <button 
-                onClick={() => setShowCollection(true)}
-                className="flex items-center gap-2 text-[10px] font-bold uppercase bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
-            >
-                <BookIcon className="w-3 h-3" />
-                Ver Todas
-            </button>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {COLLECTIBLES.filter(c => user.inventory.includes(c.id)).map(item => {
-            const isLegendary = item.rarity === 'legendary';
-            const isEpic = item.rarity === 'epic';
-            const isRare = item.rarity === 'rare';
-            
-            // Rarity Styles
-            let borderColor = 'border-gray-500';
-            let shadowColor = 'shadow-gray-500/20';
-            let bgColor = 'bg-gray-900';
-            
-            if (isLegendary) {
-                borderColor = 'border-orange-500';
-                shadowColor = 'shadow-orange-500/40';
-                bgColor = 'bg-orange-950';
-            } else if (isEpic) {
-                borderColor = 'border-purple-500';
-                shadowColor = 'shadow-purple-500/40';
-                bgColor = 'bg-purple-950';
-            } else if (isRare) {
-                borderColor = 'border-blue-500';
-                shadowColor = 'shadow-blue-500/40';
-                bgColor = 'bg-blue-950';
-            }
-
-            return (
-              <div 
-                key={item.id} 
-                onClick={() => setViewCard(item)}
+            {/* Histórias da Noite Section - Widget Interativo */}
+            <div 
+                onClick={handlePull}
                 className={`
-                  relative rounded-xl border-2 overflow-hidden flex flex-col shadow-lg transition-transform hover:scale-105 cursor-pointer hover:shadow-2xl
-                  ${borderColor} ${shadowColor} ${bgColor}
+                    relative group overflow-hidden rounded-[2.5rem] p-1 
+                    bg-gradient-to-br from-indigo-500 via-purple-600 to-pink-500 shadow-2xl
+                    mb-12 shrink-0 z-10 select-none
+                    ${user.credits >= GACHA_COST ? 'cursor-pointer active:scale-[0.98] hover:shadow-purple-500/20' : 'opacity-80 grayscale'}
                 `}
-              >
-                  {/* Image Area */}
-                  <div className="w-full aspect-[2/3] relative">
-                     {item.image ? (
-                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                     ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl bg-black/50">
-                            {item.icon}
-                        </div>
-                     )}
-                     {/* Gradient overlay for text readability */}
-                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
-                     
-                     <div className="absolute bottom-2 left-2 right-2">
-                         <h4 className="font-bold text-white text-xs leading-tight mb-1 drop-shadow-md">{item.name}</h4>
-                         <div className="flex gap-1">
-                             <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded text-white bg-black/50 backdrop-blur-md border border-white/20`}>{item.rarity}</span>
-                         </div>
-                     </div>
-                  </div>
+            >
+                <div className="bg-black/95 dark:bg-gray-950 backdrop-blur-xl rounded-[2.2rem] p-8 relative overflow-hidden transition-colors group-active:bg-black/90">
+                    {/* Urban Grid Background Effect */}
+                    <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'linear-gradient(#4c1d95 1px, transparent 1px), linear-gradient(90deg, #4c1d95 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
+                    <div className="absolute -top-24 -right-24 w-64 h-64 bg-purple-600/20 blur-[100px] rounded-full delay-700 animate-pulse"></div>
+                    
+                    <div className="relative z-10 text-center space-y-6">
+                        <header className="space-y-1">
+                            <h3 className="text-[10px] font-black uppercase tracking-[0.4em] text-purple-400 opacity-80">Edição Especial</h3>
+                            <h2 className="text-3xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-100 to-indigo-200 tracking-tighter uppercase leading-none">
+                                Histórias da Noite
+                            </h2>
+                        </header>
 
-                  {/* Stats Footer */}
-                  <div className="p-2 bg-black/40 text-[9px] font-mono text-white flex justify-between border-t border-white/10">
-                     <div className="flex flex-col items-center">
-                        <span className="text-red-400 font-bold">STR</span>
-                        <span>{item.stats.str}</span>
-                     </div>
-                     <div className="flex flex-col items-center">
-                        <span className="text-blue-400 font-bold">INT</span>
-                        <span>{item.stats.int}</span>
-                     </div>
-                     <div className="flex flex-col items-center">
-                        <span className="text-green-400 font-bold">AGI</span>
-                        <span>{item.stats.agi}</span>
-                     </div>
-                  </div>
-              </div>
-            )
-          })}
-          {user.inventory.length === 0 && (
-            <div className="col-span-full text-center py-8 opacity-30 text-sm">Nenhuma carta coletada.</div>
-          )}
-        </div>
+                        <div className="flex flex-col items-center">
+                            <div className="text-5xl font-black text-white drop-shadow-[0_0_15px_rgba(167,139,250,0.5)]">
+                                {Math.floor(user.credits)}
+                            </div>
+                            <span className="text-[10px] uppercase font-bold text-purple-300/60 tracking-[0.2em] mt-1">Fragmentos de Memória</span>
+                        </div>
+                        
+                        {/* Interactive Prompt - Substitui o Botão */}
+                        <div className="mt-8 text-center relative z-20">
+                            <div className={`
+                                inline-block px-6 py-2 rounded-full font-black uppercase tracking-widest text-[10px] border border-white/10
+                                ${user.credits >= GACHA_COST 
+                                    ? 'bg-white text-black animate-pulse shadow-[0_0_20px_rgba(255,255,255,0.5)]' 
+                                    : 'bg-gray-800 text-gray-500'}
+                            `}>
+                                {user.credits >= GACHA_COST ? 'Toque para Nova Carta (100)' : 'Fragmentos Insuficientes'}
+                            </div>
+                             <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest mt-2 opacity-50">
+                                Sintonize o rádio para encontrar
+                            </p>
+                        </div>
+
+                        {lastReward && (
+                            <div className="animate-bounce-in pt-6 mt-8 border-t border-white/5 relative" onClick={(e) => e.stopPropagation() /* Prevent double trigger if clicking reward */}>
+                                <div className="absolute -top-px left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-purple-500 to-transparent"></div>
+                                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-purple-400 mb-4">Captado Recentemente</p>
+                                
+                                <div className="flex justify-center">
+                                    <div className="w-24 h-32 rounded-xl border-2 border-purple-500/50 shadow-[0_0_30px_rgba(167,139,250,0.3)] overflow-hidden transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                                        <img src={COLLECTIBLES.find(c => c.id === lastReward)?.image} className="w-full h-full object-cover" />
+                                    </div>
+                                </div>
+                                <h2 className="mt-4 text-sm font-black italic text-white uppercase tracking-tight">
+                                    {COLLECTIBLES.find(c => c.id === lastReward)?.name}
+                                </h2>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {showReveal && (
+                <GachaReveal 
+                    card={revealedCard} 
+                    onComplete={handleRevealComplete} 
+                />
+            )}
+
+            {/* Inventário Section */}
+            <div className="border-t border-gray-100 dark:border-gray-800 pt-8 relative z-0">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xs font-bold uppercase opacity-50">Inventário de Cartas</h3>
+                    <button 
+                        onClick={() => setShowCollection(true)}
+                        className="flex items-center gap-2 text-[10px] font-bold uppercase bg-gray-100 dark:bg-gray-800 px-3 py-1.5 rounded-full hover:bg-black hover:text-white dark:hover:bg-white dark:hover:text-black transition-colors"
+                    >
+                        <BookIcon className="w-3 h-3" />
+                        Ver Todas
+                    </button>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {COLLECTIBLES.filter(c => user.inventory.includes(c.id)).map(item => {
+                    const isLegendary = item.rarity === 'legendary';
+                    const isEpic = item.rarity === 'epic';
+                    const isRare = item.rarity === 'rare';
+                    
+                    // Rarity Styles & Duplicates
+                    const duplicateCount = user.inventory.filter(id => id === item.id).length;
+                    const isDiamond = duplicateCount >= 5;
+                    const isGold = duplicateCount >= 2 && duplicateCount < 5;
+
+                    let borderColor = 'border-gray-500';
+                    let shadowColor = 'shadow-gray-500/20';
+                    let bgColor = 'bg-gray-900';
+                    
+                    if (isDiamond) {
+                        borderColor = 'border-transparent bg-gradient-to-r from-cyan-400 to-purple-500'; 
+                        shadowColor = 'shadow-cyan-500/50';
+                        bgColor = 'bg-slate-900';
+                    } else if (isGold) {
+                        borderColor = 'border-yellow-400';
+                        shadowColor = 'shadow-yellow-500/40';
+                        bgColor = 'bg-neutral-900';
+                    } else if (isLegendary) {
+                        borderColor = 'border-orange-500';
+                        shadowColor = 'shadow-orange-500/40';
+                        bgColor = 'bg-orange-950';
+                    } else if (isEpic) {
+                        borderColor = 'border-purple-500';
+                        shadowColor = 'shadow-purple-500/40';
+                        bgColor = 'bg-purple-950';
+                    } else if (isRare) {
+                        borderColor = 'border-blue-500';
+                        shadowColor = 'shadow-blue-500/40';
+                        bgColor = 'bg-blue-950';
+                    }
+
+                    return (
+                    <div 
+                        key={item.id} 
+                        onClick={() => setViewCard(item)}
+                        className={`
+                        relative rounded-xl border-2 overflow-hidden flex flex-col shadow-lg transition-transform hover:scale-105 cursor-pointer hover:shadow-2xl
+                        ${borderColor} ${shadowColor} ${bgColor}
+                        ${isDiamond ? 'animate-pulse' : ''}
+                        `}
+                    >
+                        {/* Image Area */}
+                        <div className="w-full aspect-[2/3] relative">
+                            {item.image ? (
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-4xl bg-black/50">
+                                    {item.icon}
+                                </div>
+                            )}
+                            {/* Gradient overlay for text readability */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
+                            
+                            <div className="absolute top-1 right-1 flex flex-col items-end gap-1">
+                                {isDiamond && <span className="text-xs">💎</span>}
+                                {isGold && <span className="text-xs">👑</span>}
+                                {duplicateCount > 1 && (
+                                    <span className="text-[9px] font-black bg-black text-white px-1 rounded shadow-md border border-white/20">x{duplicateCount}</span>
+                                )}
+                            </div>
+
+                            <div className="absolute bottom-2 left-2 right-2">
+                                <h4 className="font-bold text-white text-xs leading-tight mb-1 drop-shadow-md">{item.name}</h4>
+                                <div className="flex gap-1">
+                                    <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded text-white bg-black/50 backdrop-blur-md border border-white/20`}>{item.rarity}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Stats Footer */}
+                        <div className="p-2 bg-black/40 text-[9px] font-mono text-white flex justify-between border-t border-white/10">
+                            <div className="flex flex-col items-center">
+                                <span className="text-red-400 font-bold">STR</span>
+                                <span>{item.stats.str}</span>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <span className="text-blue-400 font-bold">INT</span>
+                                <span>{item.stats.int}</span>
+                            </div>
+                            <div className="flex flex-col items-center">
+                                <span className="text-green-400 font-bold">AGI</span>
+                                <span>{item.stats.agi}</span>
+                            </div>
+                        </div>
+                    </div>
+                    )
+                })}
+                {user.inventory.length === 0 && (
+                    <div className="col-span-full text-center py-8 opacity-30 text-sm">Nenhuma carta coletada.</div>
+                )}
+                </div>
+            </div>
+            
+            <div className="mt-8 pt-8 border-t dark:border-gray-800">
+                <button onClick={handleBackup} className="text-xs uppercase font-bold text-gray-400 hover:text-black dark:hover:text-white underline">Forçar Backup Manual</button>
+            </div>
       </div>
-      
-      <div className="mt-8 pt-8 border-t dark:border-gray-800">
-        <button onClick={handleBackup} className="text-xs uppercase font-bold text-gray-400 hover:text-black dark:hover:text-white underline">Forçar Backup Manual</button>
-      </div>
+
       {/* Card Modal */}
       {viewCard && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setViewCard(null)}>
              <div className="relative max-w-sm w-full bg-gray-900 rounded-3xl border-4 border-gray-800 p-6 shadow-2xl overflow-hidden" onClick={e => e.stopPropagation()}>
-                {/* Glow */}
-                <div className={`absolute inset-0 ${
-                    viewCard.rarity === 'legendary' ? 'bg-orange-500/20' : 
-                    viewCard.rarity === 'epic' ? 'bg-purple-500/20' : 
-                    viewCard.rarity === 'rare' ? 'bg-blue-500/20' : 'bg-gray-500/20'
-                } animate-pulse blur-xl`}></div>
 
-                <div className="relative z-10 flex flex-col items-center text-white">
-                   <div className={`w-64 h-80 rounded-xl border-4 ${
-                       viewCard.rarity === 'legendary' ? 'border-orange-500' : 
-                       viewCard.rarity === 'epic' ? 'border-purple-500' : 
-                       viewCard.rarity === 'rare' ? 'border-blue-500' : 'border-gray-500'
-                   } shadow-2xl overflow-hidden mb-6 relative`}>
-                      <img src={viewCard.image} alt={viewCard.name} className="w-full h-full object-cover" />
-                      <div className="absolute bottom-0 w-full bg-black/60 text-center py-1 text-[10px] font-bold uppercase">{viewCard.rarity}</div>
-                   </div>
+                 <div className="relative z-10 flex flex-col items-center text-white w-full">
+                    <div className="w-64 h-80 mb-6 perspective-1000">
+                        <HolographicCard 
+                            image={viewCard.image || ''} 
+                            name={viewCard.name} 
+                            rarity={viewCard.rarity} 
+                            stats={viewCard.stats}
+                            className="w-full h-full"
+                            count={user.inventory.filter(id => id === viewCard.id).length}
+                        />
+                    </div>
 
-                   <h2 className="text-3xl font-black italic tracking-tighter mb-2 text-center">{viewCard.name}</h2>
-                   <p className="text-sm opacity-70 text-center leading-relaxed mb-6 italic">"{viewCard.description}"</p>
-
-                   <div className="flex gap-4 w-full justify-center">
-                      <div className="bg-black/50 p-2 rounded flex flex-col items-center min-w-[60px]">
-                         <span className="text-red-400 font-bold text-xs">STR</span>
-                         <span className="text-xl font-mono">{viewCard.stats.str}</span>
-                      </div>
-                      <div className="bg-black/50 p-2 rounded flex flex-col items-center min-w-[60px]">
-                         <span className="text-blue-400 font-bold text-xs">INT</span>
-                         <span className="text-xl font-mono">{viewCard.stats.int}</span>
-                      </div>
-                      <div className="bg-black/50 p-2 rounded flex flex-col items-center min-w-[60px]">
-                         <span className="text-green-400 font-bold text-xs">AGI</span>
-                         <span className="text-xl font-mono">{viewCard.stats.agi}</span>
-                      </div>
-                   </div>
-                   
-                   <button onClick={() => setViewCard(null)} className="mt-8 text-xs uppercase font-bold text-gray-400 hover:text-white">Fechar</button>
+                    <p className="text-sm opacity-70 text-center leading-relaxed mb-6 italic max-w-[250px]">"{viewCard.description}"</p>
+                    
+                    <button onClick={() => setViewCard(null)} className="mt-2 text-xs uppercase font-bold text-gray-400 hover:text-white">Fechar</button>
                 </div>
              </div>
           </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useLayoutEffect } from 'react';
 import { COLLECTIBLES } from '../services/gacha';
 import { Collectible } from '../types';
 
@@ -27,6 +27,16 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, onClose, user
   };
 
   const [viewCard, setViewCard] = React.useState<Collectible | null>(null);
+  
+  // Preload images immediately when modal opens
+  useLayoutEffect(() => {
+     COLLECTIBLES.forEach(card => {
+         if (card.image) {
+             const img = new Image();
+             img.src = card.image;
+         }
+     });
+  }, []);
 
   const renderSection = (title: string, cards: Collectible[], rarity: keyof typeof rarityColors) => {
       if (cards.length === 0) return null;

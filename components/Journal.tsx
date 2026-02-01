@@ -129,7 +129,7 @@ const Journal: React.FC<JournalProps> = ({ entries, onSave }) => {
   };
 
   return (
-    <div className="flex flex-col h-full space-y-4 pb-20 relative">
+    <div className="flex flex-col h-full space-y-4 pb-20 relative overflow-y-auto no-scrollbar">
       <header className="flex justify-between items-end">
         <div>
             <h2 className="text-3xl font-bold tracking-tighter uppercase mb-1">Diário</h2>

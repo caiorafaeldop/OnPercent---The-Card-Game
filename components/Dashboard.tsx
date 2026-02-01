@@ -1,33 +1,27 @@
 import React, { useState } from 'react';
-import { Habit } from '../types';
+import { Habit, UserState } from '../types';
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import { COLLECTIBLES } from '../services/gacha';
 import { soundService } from '../services/audio';
+import { BookIcon, TrophyIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
 
 import { calculateCurrentStreak, calculateBestStreak } from '../services/gamification';
 
 interface DashboardProps {
+  user: UserState;
   habits: Habit[];
-  xp: number;
-  level: number;
-  inventory: string[];
-}
-
-import { ChevronLeftIcon, ChevronRightIcon } from './Icons';
-
-// ... (imports)
-
-interface DashboardProps {
-  habits: Habit[];
-  xp: number;
-  level: number;
-  inventory: string[];
   onToggle: (habitId: string, date: string) => void;
+  onRecordMeal: () => void;
+  onUpdateMeal: (date: string, count: number) => void;
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ habits, xp, level, inventory, onToggle }) => {
-  const [selectedHabitId, setSelectedHabitId] = useState<string>('all');
-  const [viewCardId, setViewCardId] = useState<string | null>(null);
+const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordMeal, onUpdateMeal }) => {
+    const { xp, level, inventory } = user;
+    const [selectedHabitId, setSelectedHabitId] = useState<string>('all');
+    const [viewCardId, setViewCardId] = useState<string | null>(null);
+    const [showMealHistory, setShowMealHistory] = useState(false);
+    const [historyDate, setHistoryDate] = useState(new Date());
+    const [editingDate, setEditingDate] = useState<string | null>(null);
   
   // Calendar View State
   const [viewDate, setViewDate] = useState(new Date());
@@ -206,6 +200,139 @@ const Dashboard: React.FC<DashboardProps> = ({ habits, xp, level, inventory, onT
            </div>
         </div>
       </div>
+
+      {/* Nutrition Feed */}
+      <div className="p-6 bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 text-center space-y-4 shadow-sm">
+          <h3 className="text-sm font-black uppercase tracking-widest mb-2 flex flex-col items-center">
+             <span>🍱 Nutrition Feed</span>
+             <span className="text-[10px] text-gray-400 font-normal mt-1">Refeições de Hoje</span>
+          </h3>
+
+          <div className="flex justify-center gap-2 mb-4">
+              {[...Array(5)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className={`w-4 h-4 rounded-full transition-all duration-300 ${i < (user.mealsToday || 0) ? 'bg-green-500 scale-110 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-gray-200 dark:bg-gray-800'}`}
+                  />
+              ))}
+          </div>
+
+          <button 
+            onClick={onRecordMeal}
+            disabled={(user.mealsToday || 0) >= 5}
+            className={`
+               w-full py-4 rounded-2xl font-black uppercase tracking-widest text-lg transition-all relative overflow-hidden group
+               ${(user.mealsToday || 0) >= 5 
+                  ? 'bg-green-500 text-white cursor-default shadow-lg shadow-green-500/20' 
+                  : 'bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 active:scale-95'}
+            `}
+          >
+             {(user.mealsToday || 0) >= 5 ? 'COMBO COMPLETO!' : 'Registrar Refeição (+20)'}
+             
+             {/* Progress Fill Background Effect */}
+             {(user.mealsToday || 0) < 5 && (
+               <div className="absolute bottom-0 left-0 h-1 bg-green-500 transition-all duration-300" style={{ width: `${((user.mealsToday || 0) / 5) * 100}%` }} />
+             )}
+          </button>
+          
+          <div className="flex gap-2 justify-center">
+             <button
+                disabled={(user.mealsToday || 0) <= 0}
+                onClick={() => {
+                   const todayISO = new Date().toLocaleDateString('en-CA');
+                   onUpdateMeal(todayISO, Math.max(0, (user.mealsToday || 0) - 1));
+                }}
+                className="text-xs font-bold uppercase text-gray-400 hover:text-red-500 disabled:opacity-30 transition-colors px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800"
+             >
+                -1 Corrigir
+             </button>
+             <button
+                onClick={() => setShowMealHistory(true)}
+                className="text-xs font-bold uppercase text-gray-400 hover:text-black dark:hover:text-white transition-colors px-3 py-1 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center gap-1"
+             >
+                <CalendarIcon className="w-3 h-3" />
+                Histórico
+             </button>
+          </div>
+      </div>
+
+      {/* Meal History Modal */}
+      {showMealHistory && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setShowMealHistory(false)}>
+              <div className="bg-white dark:bg-gray-900 rounded-3xl p-6 w-full max-w-sm border border-gray-200 dark:border-gray-800 shadow-2xl" onClick={e => e.stopPropagation()}>
+                  <div className="flex justify-between items-center mb-6">
+                      <button onClick={() => setHistoryDate(new Date(historyDate.getFullYear(), historyDate.getMonth() - 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><ChevronLeftIcon className="w-4 h-4" /></button>
+                      <h3 className="font-bold uppercase text-sm text-center flex-1">{historyDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</h3>
+                      <button onClick={() => setHistoryDate(new Date(historyDate.getFullYear(), historyDate.getMonth() + 1, 1))} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-full"><ChevronRightIcon className="w-4 h-4" /></button>
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-2 mb-2 text-center text-[10px] uppercase font-bold opacity-50">
+                      {['D','S','T','Q','Q','S','S'].map(d => <span key={d}>{d}</span>)}
+                  </div>
+
+                  <div className="grid grid-cols-7 gap-2">
+                       {Array(new Date(historyDate.getFullYear(), historyDate.getMonth(), 1).getDay()).fill(null).map((_, i) => <div key={`e-meal-${i}`} />)}
+                       
+                       {Array(new Date(historyDate.getFullYear(), historyDate.getMonth() + 1, 0).getDate()).fill(null).map((_, i) => {
+                           const day = i + 1;
+                           const dateStr = `${historyDate.getFullYear()}-${String(historyDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                           const count = user.mealHistory?.[dateStr] || 0;
+                           const isToday = dateStr === new Date().toLocaleDateString('en-CA');
+                           
+                           return (
+                               <div 
+                                  key={day}
+                                  onClick={() => setEditingDate(dateStr)}
+                                  className={`
+                                      aspect-square rounded-lg flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 active:scale-95
+                                      ${isToday ? 'ring-2 ring-black dark:ring-white z-10' : ''}
+                                      ${count === 0 ? 'bg-gray-50 dark:bg-gray-800 text-gray-300' : ''}
+                                      ${count > 0 && count < 5 ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : ''}
+                                      ${count >= 5 ? 'bg-green-500 text-white shadow-lg' : ''}
+                                  `}
+                               >
+                                   <span className="text-[10px] font-bold">{day}</span>
+                                   {count > 0 && <span className="text-[8px] font-black">{count}</span>}
+                               </div>
+                           )
+                       })}
+                  </div>
+                  <div className="mt-4 text-center">
+                    <button onClick={() => setShowMealHistory(false)} className="text-xs uppercase font-bold opacity-50 hover:opacity-100">Fechar</button>
+                  </div>
+              </div>
+                  {/* Mini Modal for Editing */}
+                  {editingDate && (
+                      <div className="absolute inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm rounded-3xl" onClick={() => setEditingDate(null)}>
+                          <div className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-xl w-full max-w-[200px] border border-gray-100 dark:border-gray-700" onClick={e => e.stopPropagation()}>
+                              <div className="text-center mb-3">
+                                  <h4 className="text-[10px] font-bold uppercase opacity-50">Editar Refeições</h4>
+                                  <p className="text-xs font-bold">{new Date(editingDate).toLocaleDateString('pt-BR', {day: 'numeric', month: 'short'})}</p>
+                              </div>
+                              <div className="grid grid-cols-3 gap-2">
+                                  {[0,1,2,3,4,5].map(val => (
+                                      <button
+                                          key={val}
+                                          onClick={() => {
+                                              onUpdateMeal(editingDate, val);
+                                              setEditingDate(null);
+                                          }}
+                                          className={`
+                                              py-2 rounded-lg font-bold text-sm transition-all
+                                              ${(user.mealHistory?.[editingDate] || 0) === val 
+                                                  ? 'bg-green-500 text-white shadow-lg shadow-green-500/30' 
+                                                  : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'}
+                                          `}
+                                      >
+                                          {val}
+                                      </button>
+                                  ))}
+                              </div>
+                          </div>
+                      </div>
+                  )}
+          </div>
+      )}
 
       {/* Gacha Stats & Rarity Chart */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

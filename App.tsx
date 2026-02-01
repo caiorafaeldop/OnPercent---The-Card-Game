@@ -17,7 +17,7 @@ const App: React.FC = () => {
   
   const [habits, setHabits] = useState<Habit[]>([]);
   const [journal, setJournal] = useState<JournalEntry[]>([]);
-  const [user, setUser] = useState<UserState>({ xp: 0, level: 1, name: 'User', credits: 0, inventory: [] });
+  const [user, setUser] = useState<UserState>({ xp: 0, level: 1, name: 'User', credits: 0, inventory: [], mealHistory: {} });
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
 
   // Initialization
@@ -170,12 +170,18 @@ const App: React.FC = () => {
 
   const handleRecordMeal = () => {
       const today = new Date().toDateString();
+      const todayISO = new Date().toLocaleDateString('en-CA');
+
       if ((user.mealsToday || 0) < 5) {
           setUser(prev => ({
               ...prev,
               credits: prev.credits + 20,
               mealsToday: (prev.mealsToday || 0) + 1,
-              lastMealDate: today
+              lastMealDate: today,
+              mealHistory: {
+                  ...(prev.mealHistory || {}),
+                  [todayISO]: ((prev.mealsToday || 0) + 1)
+              }
           }));
           // Play sounds
           import('./services/audio').then(({ soundService }) => {
@@ -187,22 +193,62 @@ const App: React.FC = () => {
       }
   };
 
+  const handleUpdateMeal = (date: string, count: number) => {
+      // date is YYYY-MM-DD
+      const todayISO = new Date().toLocaleDateString('en-CA');
+      const isToday = date === todayISO;
+
+      setUser(prev => {
+          const diff = count - (prev.mealHistory?.[date] || 0);
+          
+          let newCredits = prev.credits;
+          let newMealsToday = prev.mealsToday;
+
+          // Only adjust credits/today-state if editing TODAY
+          if (isToday) {
+             // If increasing, add 20 per meal. If decreasing, remove 20 per meal.
+             // (Assuming 20 credits per meal)
+             newCredits = prev.credits + (diff * 20);
+             newMealsToday = count;
+          }
+
+          return {
+              ...prev,
+              credits: Math.max(0, newCredits),
+              mealsToday: isToday ? count : newMealsToday,
+              mealHistory: {
+                  ...(prev.mealHistory || {}),
+                  [date]: count
+              }
+          };
+      });
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'habits':
         return <HabitList habits={habits} onAdd={addHabit} onToggle={toggleHabit} onDelete={deleteHabit} />;
       case 'dashboard':
-        return <Dashboard habits={habits} xp={user.xp} level={user.level} inventory={user.inventory} onToggle={toggleHabit} />;
+        return (
+          <Dashboard 
+            user={user}
+            habits={habits} 
+            onToggle={toggleHabit} 
+            onRecordMeal={handleRecordMeal}
+            onUpdateMeal={handleUpdateMeal}
+          />
+        );
       case 'journal':
         return <Journal entries={journal} onSave={saveJournalEntry} />;
       case 'profile':
-        return <Profile 
-          user={user} 
-          unlockedAchievements={unlockedAchievements} 
-          onAddCredits={handleAddCredits}
-          onPullGacha={handlePullGacha}
-          onRecordMeal={handleRecordMeal}
-        />;
+        return (
+          <Profile 
+            user={user} 
+            unlockedAchievements={unlockedAchievements} 
+            onAddCredits={handleAddCredits}
+            onPullGacha={handlePullGacha}
+          />
+        );
       default:
         return <HabitList habits={habits} onAdd={addHabit} onToggle={toggleHabit} onDelete={deleteHabit} />;
     }

@@ -48,6 +48,7 @@ export interface UserState {
   lastBackupDate: string | null;
   mealsToday: number;
   lastMealDate: string | null; // YYYY-MM-DD
+  mealHistory?: Record<string, number>; // YYYY-MM-DD -> count
 }
 
 export type Tab = 'habits' | 'dashboard' | 'journal' | 'profile';
