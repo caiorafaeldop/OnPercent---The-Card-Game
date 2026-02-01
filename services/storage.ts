@@ -68,3 +68,17 @@ export const exportData = (): string => {
   };
   return JSON.stringify(data, null, 2);
 };
+
+export const importData = (json: string): boolean => {
+  try {
+    const data = JSON.parse(json);
+    if (data.user) saveUser(data.user);
+    if (data.habits) saveHabits(data.habits);
+    if (data.journal) saveJournal(data.journal);
+    if (data.theme !== undefined) saveTheme(data.theme);
+    return true;
+  } catch (e) {
+    console.error("Failed to import data", e);
+    return false;
+  }
+};
