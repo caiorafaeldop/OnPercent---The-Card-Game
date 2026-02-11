@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { TellioWidget } from 'tellio-react';
 import Layout from './components/Layout';
 import HabitList from './components/HabitList';
 import Dashboard from './components/Dashboard';
@@ -359,6 +360,13 @@ const App: React.FC = () => {
           </div>
       )}
 
+      {/* Tellio Widget Integration */}
+      <TellioWidget 
+        id="6a9ffcae-689f-43d6-a8aa-69401360c9ef"
+        user={{
+            name: user.name
+        }}
+      />
     </Layout>
   );
 };
