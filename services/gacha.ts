@@ -8,7 +8,12 @@ export const COLLECTIBLES: Collectible[] = [
   ...HISTORIA_DA_NOITE_COLLECTION
 ];
 
-export const pullGacha = (): Collectible => {
+export const getAllCollectibles = (customCards: Collectible[] = []): Collectible[] => [
+  ...COLLECTIBLES,
+  ...customCards
+];
+
+export const pullGacha = (cards: Collectible[] = COLLECTIBLES): Collectible => {
   const rand = Math.random();
   let pool: Collectible[] = [];
 
@@ -19,20 +24,24 @@ export const pullGacha = (): Collectible => {
   // Common: 50% (0.00 - 0.50)
 
   if (rand < 0.50) {
-    pool = COLLECTIBLES.filter(c => c.rarity === 'common');
+    pool = cards.filter(c => c.rarity === 'common');
   } else if (rand < 0.80) {
-    pool = COLLECTIBLES.filter(c => c.rarity === 'rare');
+    pool = cards.filter(c => c.rarity === 'rare');
   } else if (rand < 0.95) {
-    pool = COLLECTIBLES.filter(c => c.rarity === 'epic');
-    if (pool.length === 0) pool = COLLECTIBLES.filter(c => c.rarity === 'rare');
+    pool = cards.filter(c => c.rarity === 'epic');
+    if (pool.length === 0) pool = cards.filter(c => c.rarity === 'rare');
   } else {
-    pool = COLLECTIBLES.filter(c => c.rarity === 'legendary');
-    if (pool.length === 0) pool = COLLECTIBLES.filter(c => c.rarity === 'epic');
+    pool = cards.filter(c => c.rarity === 'legendary');
+    if (pool.length === 0) pool = cards.filter(c => c.rarity === 'epic');
   }
 
   // Fallback safe
   if (pool.length === 0) {
-    pool = COLLECTIBLES.filter(c => c.rarity === 'common');
+    pool = cards.filter(c => c.rarity === 'common');
+  }
+
+  if (pool.length === 0) {
+    pool = cards;
   }
 
   const index = Math.floor(Math.random() * pool.length);

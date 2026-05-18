@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UserState, Collectible } from '../types';
 import { ACHIEVEMENTS_LIST, LEVEL_THRESHOLDS } from '../services/gamification';
-import { pullGacha, COLLECTIBLES, GACHA_COST, BONUS_CREDITS } from '../services/gacha';
+import { pullGacha, COLLECTIBLES, GACHA_COST } from '../services/gacha';
 import { exportData, saveUser } from '../services/storage';
 import { BookIcon, TrophyIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
 import CollectionModal from './CollectionModal';
@@ -10,18 +10,20 @@ import HolographicCard from './HolographicCard';
 
 interface ProfileProps {
   user: UserState;
+  customCards: Collectible[];
   unlockedAchievements: string[];
   onAddCredits: (amount: number) => void;
   onPullGacha: (newItemId: string) => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCredits, onPullGacha }) => {
+const Profile: React.FC<ProfileProps> = ({ user, customCards, unlockedAchievements, onAddCredits, onPullGacha }) => {
   const [lastReward, setLastReward] = useState<string | null>(null);
   const [viewCard, setViewCard] = useState<Collectible | null>(null);
   const [showBackupAlert, setShowBackupAlert] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
   const [revealedCard, setRevealedCard] = useState<Collectible | null>(null);
   const [showReveal, setShowReveal] = useState(false);
+  const allCards = React.useMemo(() => [...COLLECTIBLES, ...customCards], [customCards]);
 
   const nextLevelXP = LEVEL_THRESHOLDS[user.level] || 100000;
   const currentLevelXP = LEVEL_THRESHOLDS[user.level - 1] || 0;
@@ -43,9 +45,9 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
     if (user.credits < GACHA_COST) return;
     
     // Find the result immediately for the reveal component
-    const result = pullGacha();
+    const result = pullGacha(allCards);
     if (result) {
-        const card = COLLECTIBLES.find(c => c.id === result.id);
+        const card = allCards.find(c => c.id === result.id);
         if (card) {
             setRevealedCard(card);
             setShowReveal(true);
@@ -152,11 +154,11 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
                                 
                                 <div className="flex justify-center">
                                     <div className="w-24 h-32 rounded-xl border-2 border-purple-500/50 shadow-[0_0_30px_rgba(167,139,250,0.3)] overflow-hidden transform -rotate-3 hover:rotate-0 transition-transform duration-500">
-                                        <img src={COLLECTIBLES.find(c => c.id === lastReward)?.image} className="w-full h-full object-cover" />
+                                        <img src={allCards.find(c => c.id === lastReward)?.image} className="w-full h-full object-cover" />
                                     </div>
                                 </div>
                                 <h2 className="mt-4 text-sm font-black italic text-white uppercase tracking-tight">
-                                    {COLLECTIBLES.find(c => c.id === lastReward)?.name}
+                                    {allCards.find(c => c.id === lastReward)?.name}
                                 </h2>
                             </div>
                         )}
@@ -184,7 +186,7 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
                     </button>
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {COLLECTIBLES.filter(c => user.inventory.includes(c.id)).map(item => {
+                {allCards.filter(c => user.inventory.includes(c.id)).map(item => {
                     const isLegendary = item.rarity === 'legendary';
                     const isEpic = item.rarity === 'epic';
                     const isRare = item.rarity === 'rare';
@@ -313,6 +315,7 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
         isOpen={showCollection} 
         onClose={() => setShowCollection(false)} 
         userInventory={user.inventory} 
+        cards={allCards}
       />
     </div>
   );

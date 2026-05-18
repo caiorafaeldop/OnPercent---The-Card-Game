@@ -6,17 +6,16 @@ interface CollectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   userInventory: string[]; // List of owned card IDs
+  cards?: Collectible[];
 }
 
-const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, onClose, userInventory }) => {
-  if (!isOpen) return null;
-
+const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, onClose, userInventory, cards = COLLECTIBLES }) => {
   // Group cards by rarity
   const cardsByRarity = {
-    legendary: COLLECTIBLES.filter(c => c.rarity === 'legendary'),
-    epic: COLLECTIBLES.filter(c => c.rarity === 'epic'),
-    rare: COLLECTIBLES.filter(c => c.rarity === 'rare'),
-    common: COLLECTIBLES.filter(c => c.rarity === 'common'),
+    legendary: cards.filter(c => c.rarity === 'legendary'),
+    epic: cards.filter(c => c.rarity === 'epic'),
+    rare: cards.filter(c => c.rarity === 'rare'),
+    common: cards.filter(c => c.rarity === 'common'),
   };
 
   const rarityColors = {
@@ -30,13 +29,16 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, onClose, user
   
   // Preload images immediately when modal opens
   useLayoutEffect(() => {
-     COLLECTIBLES.forEach(card => {
+     if (!isOpen) return;
+     cards.forEach(card => {
          if (card.image) {
              const img = new Image();
              img.src = card.image;
          }
      });
-  }, []);
+  }, [cards, isOpen]);
+
+  if (!isOpen) return null;
 
   const renderSection = (title: string, cards: Collectible[], rarity: keyof typeof rarityColors) => {
       if (cards.length === 0) return null;
@@ -84,7 +86,7 @@ const CollectionModal: React.FC<CollectionModalProps> = ({ isOpen, onClose, user
             <div>
                 <h2 className="text-2xl font-black uppercase tracking-tight">Albúm de Cartas</h2>
                 <div className="text-sm opacity-60 font-medium">
-                    Progresso Total: {userInventory.length} / {COLLECTIBLES.length}
+                    Progresso Total: {userInventory.length} / {cards.length}
                 </div>
             </div>
             <button 

@@ -1,15 +1,25 @@
-import { Habit, JournalEntry, UserState } from '../types';
+import { Collectible, Habit, JournalEntry, UserState } from '../types';
 
 const KEYS = {
   HABITS: 'onpercent_habits',
   JOURNAL: 'onpercent_journal',
   USER: 'onpercent_user',
-  THEME: 'onpercent_theme'
+  THEME: 'onpercent_theme',
+  CUSTOM_CARDS: 'onpercent_custom_cards',
+  GROQ_KEY: 'onpercent_groq_key'
+};
+
+const safeJsonParse = <T,>(raw: string | null, fallback: T): T => {
+  if (!raw) return fallback;
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
 };
 
 export const loadHabits = (): Habit[] => {
-  const data = localStorage.getItem(KEYS.HABITS);
-  return data ? JSON.parse(data) : [];
+  return safeJsonParse<Habit[]>(localStorage.getItem(KEYS.HABITS), []);
 };
 
 export const saveHabits = (habits: Habit[]) => {
@@ -17,8 +27,7 @@ export const saveHabits = (habits: Habit[]) => {
 };
 
 export const loadJournal = (): JournalEntry[] => {
-  const data = localStorage.getItem(KEYS.JOURNAL);
-  return data ? JSON.parse(data) : [];
+  return safeJsonParse<JournalEntry[]>(localStorage.getItem(KEYS.JOURNAL), []);
 };
 
 export const saveJournal = (entries: JournalEntry[]) => {
@@ -26,27 +35,44 @@ export const saveJournal = (entries: JournalEntry[]) => {
 };
 
 export const loadUser = (): UserState => {
-  const data = localStorage.getItem(KEYS.USER);
-  // Migration for old users or default
-  const defaultUser: UserState = { 
-    xp: 0, 
-    level: 1, 
-    name: 'Aspiring 1%', 
-    credits: 100, // Start with 1 free pull
+  const defaultUser: UserState = {
+    xp: 0,
+    level: 1,
+    name: 'Aspiring 1%',
+    credits: 100,
     inventory: [],
     lastBackupDate: null,
     mealsToday: 0,
     lastMealDate: null
   };
-  
-  if (!data) return defaultUser;
-  
-  const parsed = JSON.parse(data);
+
+  const parsed = safeJsonParse<Partial<UserState>>(localStorage.getItem(KEYS.USER), {});
   return { ...defaultUser, ...parsed };
 };
 
 export const saveUser = (user: UserState) => {
   localStorage.setItem(KEYS.USER, JSON.stringify(user));
+};
+
+export const loadCustomCards = (): Collectible[] => {
+  const cards = safeJsonParse<Collectible[]>(localStorage.getItem(KEYS.CUSTOM_CARDS), []);
+  return cards.filter(card => card && card.id && card.name);
+};
+
+export const saveCustomCards = (cards: Collectible[]) => {
+  localStorage.setItem(KEYS.CUSTOM_CARDS, JSON.stringify(cards));
+};
+
+export const loadGroqKey = (): string => {
+  return localStorage.getItem(KEYS.GROQ_KEY) || '';
+};
+
+export const saveGroqKey = (key: string) => {
+  if (key.trim()) {
+    localStorage.setItem(KEYS.GROQ_KEY, key.trim());
+  } else {
+    localStorage.removeItem(KEYS.GROQ_KEY);
+  }
 };
 
 export const loadTheme = (): boolean => {
@@ -63,6 +89,7 @@ export const exportData = (): string => {
     user: loadUser(),
     habits: loadHabits(),
     journal: loadJournal(),
+    customCards: loadCustomCards(),
     theme: loadTheme(),
     timestamp: new Date().toISOString()
   };
@@ -75,10 +102,11 @@ export const importData = (json: string): boolean => {
     if (data.user) saveUser(data.user);
     if (data.habits) saveHabits(data.habits);
     if (data.journal) saveJournal(data.journal);
+    if (data.customCards) saveCustomCards(data.customCards);
     if (data.theme !== undefined) saveTheme(data.theme);
     return true;
   } catch (e) {
-    console.error("Failed to import data", e);
+    console.error('Failed to import data', e);
     return false;
   }
 };

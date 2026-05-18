@@ -23,20 +23,28 @@ export interface Achievement {
 }
 
 export interface CardStats {
-  str: number; // Vontade/Ataque
-  int: number; // Foco/Estratégia
-  agi: number; // Resiliência/Esquiva
+  str: number; // Will/attack
+  int: number; // Focus/strategy
+  agi: number; // Resilience/evasion
 }
+
+export type CardRarity = 'common' | 'rare' | 'epic' | 'legendary';
+export type CardCollection = 'core' | 'historias-da-noite' | 'custom';
 
 export interface Collectible {
   id: string;
   name: string;
   description: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
-  collection: 'core' | 'historias-da-noite';
+  rarity: CardRarity;
+  collection: CardCollection;
   icon: string; // Emoji or simple visual rep
-  image?: string; // Path to local asset
+  image?: string; // Path or generated URL
   stats: CardStats;
+  createdAt?: string;
+  prompt?: string;
+  imagePrompt?: string;
+  aiProvider?: 'groq' | 'local';
+  seed?: number;
 }
 
 export interface UserState {
@@ -51,4 +59,4 @@ export interface UserState {
   mealHistory?: Record<string, number>; // YYYY-MM-DD -> count
 }
 
-export type Tab = 'habits' | 'dashboard' | 'journal' | 'profile';
+export type Tab = 'habits' | 'dashboard' | 'journal' | 'cards' | 'profile';

@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { TellioWidget } from 'tellio-react';
 import Layout from './components/Layout';
 import HabitList from './components/HabitList';
 import Dashboard from './components/Dashboard';
 import Journal from './components/Journal';
 import Profile from './components/Profile';
 import DailyBonus from './components/DailyBonus';
-import { Habit, JournalEntry, UserState, Tab } from './types';
+import CardCreator from './components/CardCreator';
+import { Collectible, Habit, JournalEntry, UserState, Tab } from './types';
 import * as Storage from './services/storage';
 import * as Gamification from './services/gamification';
 import { GACHA_COST } from './services/gacha';
@@ -18,7 +18,19 @@ const App: React.FC = () => {
   
   const [habits, setHabits] = useState<Habit[]>([]);
   const [journal, setJournal] = useState<JournalEntry[]>([]);
-  const [user, setUser] = useState<UserState>({ xp: 0, level: 1, name: 'User', credits: 0, inventory: [], mealHistory: {} });
+  const [customCards, setCustomCards] = useState<Collectible[]>([]);
+  const [user, setUser] = useState<UserState>({
+    xp: 0,
+    level: 1,
+    name: 'User',
+    credits: 0,
+    inventory: [],
+    lastBackupDate: null,
+    mealsToday: 0,
+    lastMealDate: null,
+    mealHistory: {}
+  });
+  const [isHydrated, setIsHydrated] = useState(false);
   const [unlockedAchievements, setUnlockedAchievements] = useState<string[]>([]);
 
   // Settings State
@@ -31,6 +43,7 @@ const App: React.FC = () => {
   useEffect(() => {
     setHabits(Storage.loadHabits());
     setJournal(Storage.loadJournal());
+    setCustomCards(Storage.loadCustomCards());
     const loadedUser = Storage.loadUser();
 
     // Check for daily reset of meals
@@ -48,6 +61,7 @@ const App: React.FC = () => {
     const initialJournal = Storage.loadJournal();
     const unlocked = Gamification.checkAchievements(loadedUser, initialHabits, initialJournal);
     setUnlockedAchievements(unlocked);
+    setIsHydrated(true);
   }, []);
 
   // Theme Handling
@@ -62,9 +76,12 @@ const App: React.FC = () => {
 
   // Gamification & Persistence Loop
   useEffect(() => {
+    if (!isHydrated) return;
+
     Storage.saveHabits(habits);
     Storage.saveJournal(journal);
     Storage.saveUser(user);
+    Storage.saveCustomCards(customCards);
 
     const unlocked = Gamification.checkAchievements(user, habits, journal);
     if (unlocked.length > unlockedAchievements.length) {
@@ -72,7 +89,7 @@ const App: React.FC = () => {
       setUnlockedAchievements(unlocked);
       console.log("Achievement Unlocked!");
     }
-  }, [habits, journal, user, unlockedAchievements]);
+  }, [habits, journal, user, customCards, unlockedAchievements, isHydrated]);
 
   const addHabit = (title: string, difficulty: 'easy' | 'medium' | 'hard') => {
     const newHabit: Habit = {
@@ -172,6 +189,24 @@ const App: React.FC = () => {
     }));
   };
 
+  const handleCreateCard = (card: Collectible, addToInventory: boolean) => {
+    setCustomCards(prev => [card, ...prev.filter(item => item.id !== card.id)]);
+    if (addToInventory) {
+      setUser(prev => ({
+        ...prev,
+        inventory: prev.inventory.includes(card.id) ? prev.inventory : [...prev.inventory, card.id]
+      }));
+    }
+  };
+
+  const handleDeleteCard = (id: string) => {
+    setCustomCards(prev => prev.filter(card => card.id !== id));
+    setUser(prev => ({
+      ...prev,
+      inventory: prev.inventory.filter(itemId => itemId !== id)
+    }));
+  };
+
   const handleRecordMeal = () => {
       const today = new Date().toDateString();
       const todayISO = new Date().toLocaleDateString('en-CA');
@@ -268,10 +303,19 @@ const App: React.FC = () => {
         );
       case 'journal':
         return <Journal entries={journal} onSave={saveJournalEntry} />;
+      case 'cards':
+        return (
+          <CardCreator
+            customCards={customCards}
+            onCreateCard={handleCreateCard}
+            onDeleteCard={handleDeleteCard}
+          />
+        );
       case 'profile':
         return (
           <Profile 
             user={user} 
+            customCards={customCards}
             unlockedAchievements={unlockedAchievements} 
             onAddCredits={handleAddCredits}
             onPullGacha={handlePullGacha}
@@ -359,14 +403,6 @@ const App: React.FC = () => {
               </div>
           </div>
       )}
-
-      {/* Tellio Widget Integration */}
-      <TellioWidget 
-        id="6a9ffcae-689f-43d6-a8aa-69401360c9ef"
-        user={{
-            name: user.name
-        }}
-      />
     </Layout>
   );
 };
