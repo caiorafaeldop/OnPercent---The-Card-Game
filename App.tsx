@@ -6,7 +6,8 @@ import Journal from './components/Journal';
 import Profile from './components/Profile';
 import DailyBonus from './components/DailyBonus';
 import CardCreator from './components/CardCreator';
-import { Collectible, Habit, JournalEntry, UserState, Tab } from './types';
+import Evolution from './components/Evolution';
+import { Collectible, EvolutionState, Habit, JournalEntry, UserState, Tab } from './types';
 import * as Storage from './services/storage';
 import * as Gamification from './services/gamification';
 import { GACHA_COST } from './services/gacha';
@@ -19,6 +20,7 @@ const App: React.FC = () => {
   const [habits, setHabits] = useState<Habit[]>([]);
   const [journal, setJournal] = useState<JournalEntry[]>([]);
   const [customCards, setCustomCards] = useState<Collectible[]>([]);
+  const [evolution, setEvolution] = useState<EvolutionState>(() => Storage.loadEvolution());
   const [user, setUser] = useState<UserState>({
     xp: 0,
     level: 1,
@@ -44,6 +46,7 @@ const App: React.FC = () => {
     setHabits(Storage.loadHabits());
     setJournal(Storage.loadJournal());
     setCustomCards(Storage.loadCustomCards());
+    setEvolution(Storage.loadEvolution());
     const loadedUser = Storage.loadUser();
 
     // Check for daily reset of meals
@@ -82,6 +85,7 @@ const App: React.FC = () => {
     Storage.saveJournal(journal);
     Storage.saveUser(user);
     Storage.saveCustomCards(customCards);
+    Storage.saveEvolution(evolution);
 
     const unlocked = Gamification.checkAchievements(user, habits, journal);
     if (unlocked.length > unlockedAchievements.length) {
@@ -89,7 +93,7 @@ const App: React.FC = () => {
       setUnlockedAchievements(unlocked);
       console.log("Achievement Unlocked!");
     }
-  }, [habits, journal, user, customCards, unlockedAchievements, isHydrated]);
+  }, [habits, journal, user, customCards, evolution, unlockedAchievements, isHydrated]);
 
   const addHabit = (title: string, difficulty: 'easy' | 'medium' | 'hard') => {
     const newHabit: Habit = {
@@ -303,6 +307,15 @@ const App: React.FC = () => {
         );
       case 'journal':
         return <Journal entries={journal} onSave={saveJournalEntry} />;
+      case 'evolution':
+        return (
+          <Evolution
+            evolution={evolution}
+            onChange={setEvolution}
+            onAddCredits={handleAddCredits}
+            onCreateCard={handleCreateCard}
+          />
+        );
       case 'cards':
         return (
           <CardCreator

@@ -47,6 +47,54 @@ export interface Collectible {
   seed?: number;
 }
 
+export type PersonalAttribute = 'focus' | 'energy' | 'discipline' | 'courage' | 'health' | 'social';
+export type PersonalBuild = 'monge' | 'atleta' | 'fundador' | 'artista' | 'estrategista';
+export type QuestType = 'daily' | 'weekly' | 'epic';
+
+export interface AttributeProgress {
+  xp: number;
+  level: number;
+}
+
+export interface EvolutionQuest {
+  id: string;
+  title: string;
+  description: string;
+  type: QuestType;
+  attribute: PersonalAttribute;
+  xpReward: number;
+  creditReward: number;
+  bossDamage: number;
+  cardConcept: string;
+  createdAt: string;
+  completedAt?: string;
+}
+
+export interface EvolutionBoss {
+  id: string;
+  name: string;
+  vice: string;
+  description: string;
+  hp: number;
+  maxHp: number;
+  weakness: PersonalAttribute;
+  imagePrompt?: string;
+  defeatedAt?: string;
+}
+
+export interface EvolutionState {
+  build: PersonalBuild | null;
+  attributes: Record<PersonalAttribute, AttributeProgress>;
+  quests: EvolutionQuest[];
+  boss: EvolutionBoss | null;
+  perks: string[];
+  shieldCharges: number;
+  lastPerkLevel: number;
+  campaignName?: string;
+  oracleNote?: string;
+  lastOracleAt?: string;
+}
+
 export interface UserState {
   xp: number;
   level: number;
@@ -59,4 +107,4 @@ export interface UserState {
   mealHistory?: Record<string, number>; // YYYY-MM-DD -> count
 }
 
-export type Tab = 'habits' | 'dashboard' | 'journal' | 'cards' | 'profile';
+export type Tab = 'habits' | 'dashboard' | 'journal' | 'evolution' | 'cards' | 'profile';

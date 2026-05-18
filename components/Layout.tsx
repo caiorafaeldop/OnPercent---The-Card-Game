@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tab } from '../types';
-import { ListIcon, CalendarIcon, BookIcon, TrophyIcon, MoonIcon, SunIcon, SettingsIcon, PlusIcon } from './Icons';
+import { ListIcon, CalendarIcon, BookIcon, TrophyIcon, MoonIcon, SunIcon, SettingsIcon, PlusIcon, BoltIcon } from './Icons';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDar
     { id: 'habits', icon: <ListIcon className="w-6 h-6" />, label: 'Habitos' },
     { id: 'dashboard', icon: <CalendarIcon className="w-6 h-6" />, label: 'Dash' },
     { id: 'journal', icon: <BookIcon className="w-6 h-6" />, label: 'Diario' },
+    { id: 'evolution', icon: <BoltIcon className="w-6 h-6" />, label: 'Evo' },
     { id: 'cards', icon: <PlusIcon className="w-6 h-6" />, label: 'Cartas' },
     { id: 'profile', icon: <TrophyIcon className="w-6 h-6" />, label: 'Perfil' },
   ];
@@ -52,14 +53,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDar
               key={item.id}
               onClick={() => onTabChange(item.id)}
               className={`
-                flex flex-col items-center justify-center space-y-1 w-14 transition-all duration-300
+                flex flex-col items-center justify-center space-y-1 w-12 transition-all duration-300
                 ${isActive ? 'opacity-100 scale-105' : 'opacity-40 hover:opacity-70'}
               `}
             >
               <div className={`p-1 rounded-full ${isActive ? 'bg-black text-white dark:bg-white dark:text-black' : ''}`}>
                 {item.icon}
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-wider">{item.label}</span>
+              <span className="text-[8px] font-bold uppercase tracking-wider">{item.label}</span>
             </button>
           );
         })}
