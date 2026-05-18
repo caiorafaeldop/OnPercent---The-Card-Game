@@ -19,6 +19,16 @@ export interface CardAIResult {
 const GROQ_ENDPOINT = 'https://api.groq.com/openai/v1/chat/completions';
 const GROQ_MODEL = 'llama-3.3-70b-versatile';
 
+export const getConfiguredGroqKey = (): string => {
+  return (
+    process.env.GROQ_API_KEY ||
+    process.env.groq ||
+    process.env.VITE_GROQ_API_KEY ||
+    process.env.VITE_GROQ ||
+    ''
+  );
+};
+
 export const stableSeed = (key: string): number => {
   let h = 2166136261;
   for (let i = 0; i < key.length; i += 1) {

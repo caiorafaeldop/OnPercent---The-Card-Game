@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Collectible, CardRarity } from '../types';
-import { buildPollinationsUrl, enhanceCardWithGroq, buildLocalCardResult, stableSeed, CardAIInput } from '../services/cardAi';
+import { buildPollinationsUrl, enhanceCardWithGroq, buildLocalCardResult, stableSeed, CardAIInput, getConfiguredGroqKey } from '../services/cardAi';
 import { loadGroqKey, saveGroqKey } from '../services/storage';
 import HolographicCard from './HolographicCard';
 import { PlusIcon, TrashIcon } from './Icons';
@@ -57,9 +57,11 @@ const downloadTextFile = (filename: string, content: string) => {
 };
 
 const CardCreator: React.FC<CardCreatorProps> = ({ customCards, onCreateCard, onDeleteCard }) => {
+  const envGroqKey = getConfiguredGroqKey();
+  const hasEnvGroqKey = Boolean(envGroqKey.trim());
   const [draft, setDraft] = useState<CardAIInput>(defaultDraft);
   const [groqKey, setGroqKey] = useState(() => loadGroqKey());
-  const [useGroq, setUseGroq] = useState(() => Boolean(loadGroqKey()));
+  const [useGroq, setUseGroq] = useState(() => Boolean(loadGroqKey() || getConfiguredGroqKey()));
   const [addToInventory, setAddToInventory] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
   const [status, setStatus] = useState('Pronto para forjar.');
@@ -81,8 +83,8 @@ const CardCreator: React.FC<CardCreatorProps> = ({ customCards, onCreateCard, on
 
   const handleSaveGroqKey = () => {
     saveGroqKey(groqKey);
-    setUseGroq(Boolean(groqKey.trim()));
-    setStatus(groqKey.trim() ? 'Chave Groq salva neste navegador.' : 'Groq removido. Vou usar o aprimorador local.');
+    setUseGroq(Boolean(groqKey.trim() || envGroqKey.trim()));
+    setStatus(groqKey.trim() ? 'Chave Groq salva neste navegador.' : hasEnvGroqKey ? 'Usando GROQ_API_KEY do ambiente.' : 'Groq removido. Vou usar o aprimorador local.');
   };
 
   const handleGenerate = async () => {
@@ -92,13 +94,14 @@ const CardCreator: React.FC<CardCreatorProps> = ({ customCards, onCreateCard, on
     }
 
     setIsGenerating(true);
-    setStatus(useGroq && groqKey.trim() ? 'Groq refinando prompt...' : 'Aprimorador local montando prompt...');
+    const effectiveGroqKey = groqKey.trim() || envGroqKey.trim();
+    setStatus(useGroq && effectiveGroqKey ? 'Groq refinando prompt...' : 'Aprimorador local montando prompt...');
 
     let aiResult = buildLocalCardResult(draft);
 
-    if (useGroq && groqKey.trim()) {
+    if (useGroq && effectiveGroqKey) {
       try {
-        aiResult = await enhanceCardWithGroq(draft, groqKey);
+        aiResult = await enhanceCardWithGroq(draft, effectiveGroqKey);
         setStatus('Groq refinou. Gerando imagem...');
       } catch (error) {
         console.warn('Groq failed, falling back to local enhancer', error);
@@ -162,7 +165,7 @@ const CardCreator: React.FC<CardCreatorProps> = ({ customCards, onCreateCard, on
             type="password"
             value={groqKey}
             onChange={event => setGroqKey(event.target.value)}
-            placeholder="GROQ_API_KEY opcional"
+            placeholder={hasEnvGroqKey ? 'Override local opcional' : 'GROQ_API_KEY opcional'}
             className="min-w-0 flex-1 rounded-2xl bg-gray-100 dark:bg-gray-900 px-4 py-3 text-sm font-bold outline-none border-2 border-transparent focus:border-black dark:focus:border-white"
           />
           <button
@@ -173,6 +176,12 @@ const CardCreator: React.FC<CardCreatorProps> = ({ customCards, onCreateCard, on
             Salvar
           </button>
         </div>
+
+        {hasEnvGroqKey && (
+          <p className="text-[10px] font-black uppercase tracking-widest opacity-40">
+            GROQ_API_KEY detectada no ambiente
+          </p>
+        )}
 
         <label className="flex items-center justify-between rounded-2xl bg-gray-100 dark:bg-gray-900 px-4 py-3">
           <span className="text-xs font-black uppercase">Usar Groq para prompt</span>
