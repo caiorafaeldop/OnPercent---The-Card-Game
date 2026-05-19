@@ -1,14 +1,10 @@
-import { Collectible, EvolutionState, Habit, JournalEntry, UserState } from '../types';
-import { normalizeEvolutionState } from './evolution';
+import { Habit, JournalEntry, UserState } from '../types';
 
 const KEYS = {
   HABITS: 'onpercent_habits',
   JOURNAL: 'onpercent_journal',
   USER: 'onpercent_user',
-  THEME: 'onpercent_theme',
-  CUSTOM_CARDS: 'onpercent_custom_cards',
-  EVOLUTION: 'onpercent_evolution',
-  GROQ_KEY: 'onpercent_groq_key'
+  THEME: 'onpercent_theme'
 };
 
 const safeJsonParse = <T,>(raw: string | null, fallback: T): T => {
@@ -56,36 +52,6 @@ export const saveUser = (user: UserState) => {
   localStorage.setItem(KEYS.USER, JSON.stringify(user));
 };
 
-export const loadCustomCards = (): Collectible[] => {
-  const cards = safeJsonParse<Collectible[]>(localStorage.getItem(KEYS.CUSTOM_CARDS), []);
-  return cards.filter(card => card && card.id && card.name);
-};
-
-export const saveCustomCards = (cards: Collectible[]) => {
-  localStorage.setItem(KEYS.CUSTOM_CARDS, JSON.stringify(cards));
-};
-
-export const loadEvolution = (): EvolutionState => {
-  const parsed = safeJsonParse<Partial<EvolutionState>>(localStorage.getItem(KEYS.EVOLUTION), {});
-  return normalizeEvolutionState(parsed);
-};
-
-export const saveEvolution = (state: EvolutionState) => {
-  localStorage.setItem(KEYS.EVOLUTION, JSON.stringify(normalizeEvolutionState(state)));
-};
-
-export const loadGroqKey = (): string => {
-  return localStorage.getItem(KEYS.GROQ_KEY) || '';
-};
-
-export const saveGroqKey = (key: string) => {
-  if (key.trim()) {
-    localStorage.setItem(KEYS.GROQ_KEY, key.trim());
-  } else {
-    localStorage.removeItem(KEYS.GROQ_KEY);
-  }
-};
-
 export const loadTheme = (): boolean => {
   return localStorage.getItem(KEYS.THEME) === 'dark';
 };
@@ -100,8 +66,6 @@ export const exportData = (): string => {
     user: loadUser(),
     habits: loadHabits(),
     journal: loadJournal(),
-    customCards: loadCustomCards(),
-    evolution: loadEvolution(),
     theme: loadTheme(),
     timestamp: new Date().toISOString()
   };
@@ -114,8 +78,6 @@ export const importData = (json: string): boolean => {
     if (data.user) saveUser(data.user);
     if (data.habits) saveHabits(data.habits);
     if (data.journal) saveJournal(data.journal);
-    if (data.customCards) saveCustomCards(data.customCards);
-    if (data.evolution) saveEvolution(data.evolution);
     if (data.theme !== undefined) saveTheme(data.theme);
     return true;
   } catch (e) {

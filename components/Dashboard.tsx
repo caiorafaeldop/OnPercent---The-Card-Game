@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Habit, UserState } from '../types';
 import { ResponsiveContainer, BarChart, Bar, XAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
 import { COLLECTIBLES } from '../services/gacha';
@@ -26,48 +26,62 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
   // Calendar View State
   const [viewDate, setViewDate] = useState(new Date());
 
-  const filteredHabits = selectedHabitId === 'all' 
-    ? habits 
-    : habits.filter(h => h.id === selectedHabitId);
+  const filteredHabits = useMemo(() => {
+    return selectedHabitId === 'all' 
+      ? habits 
+      : habits.filter(h => h.id === selectedHabitId);
+  }, [habits, selectedHabitId]);
 
-  // Calculate Streak Stats - KEEPING AS IS
-  const currentStreak = selectedHabitId !== 'all' 
-     ? calculateCurrentStreak(filteredHabits[0]?.completedDates || []) 
-     : habits.reduce((max, h) => Math.max(max, calculateCurrentStreak(h.completedDates)), 0);
+  // Calculate Streak Stats
+  const currentStreak = useMemo(() => {
+    return selectedHabitId !== 'all' 
+       ? calculateCurrentStreak(filteredHabits[0]?.completedDates || []) 
+       : habits.reduce((max, h) => Math.max(max, calculateCurrentStreak(h.completedDates)), 0);
+  }, [selectedHabitId, filteredHabits, habits]);
 
-  const bestStreak = selectedHabitId !== 'all' 
-     ? calculateBestStreak(filteredHabits[0]?.completedDates || [])
-     : habits.reduce((max, h) => Math.max(max, calculateBestStreak(h.completedDates)), 0);
+  const bestStreak = useMemo(() => {
+    return selectedHabitId !== 'all' 
+       ? calculateBestStreak(filteredHabits[0]?.completedDates || [])
+       : habits.reduce((max, h) => Math.max(max, calculateBestStreak(h.completedDates)), 0);
+  }, [selectedHabitId, filteredHabits, habits]);
 
   // --- Calendar Logic ---
   const currentMonth = viewDate.getMonth();
   const currentYear = viewDate.getFullYear();
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1).getDay(); 
-  const currentMonthName = viewDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  const currentMonthName = useMemo(() => {
+    return viewDate.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  }, [viewDate]);
 
   const handlePrevMonth = () => setViewDate(new Date(currentYear, currentMonth - 1, 1));
   const handleNextMonth = () => setViewDate(new Date(currentYear, currentMonth + 1, 1));
 
-  const getDayStatus = (day: number) => {
-    // FIX: Use local date construction to match HabitList logic (YYYY-MM-DD)
-    // Create date object for specific day, then format to YYYY-MM-DD local
-    const dateObj = new Date(currentYear, currentMonth, day);
-    const dateStr = dateObj.toLocaleDateString('en-CA'); // YYYY-MM-DD
-    
-    // Check if ANY filtered habit was completed on this day
-    const completedCount = filteredHabits.filter(h => h.completedDates.includes(dateStr)).length;
-    
-    if (completedCount === 0) return 'empty';
-    if (selectedHabitId !== 'all') return 'completed'; // Single habit view
-    
-    // Heatmap logic for 'All' view
-    if (completedCount === filteredHabits.length && filteredHabits.length > 0) return 'perfect';
-    if (completedCount > filteredHabits.length / 2) return 'good';
-    return 'some';
-  };
+  // Compute status for all days in the current month once
+  const dayStatuses = useMemo(() => {
+    const statuses: Record<number, string> = {};
+    for (let day = 1; day <= daysInMonth; day++) {
+      const dateObj = new Date(currentYear, currentMonth, day);
+      const dateStr = dateObj.toLocaleDateString('en-CA');
+      
+      const completedCount = filteredHabits.filter(h => h.completedDates.includes(dateStr)).length;
+      
+      if (completedCount === 0) {
+        statuses[day] = 'empty';
+      } else if (selectedHabitId !== 'all') {
+        statuses[day] = 'completed';
+      } else if (completedCount === filteredHabits.length && filteredHabits.length > 0) {
+        statuses[day] = 'perfect';
+      } else if (completedCount > filteredHabits.length / 2) {
+        statuses[day] = 'good';
+      } else {
+        statuses[day] = 'some';
+      }
+    }
+    return statuses;
+  }, [currentYear, currentMonth, daysInMonth, filteredHabits, selectedHabitId]);
   
-  const getRarityStats = () => {
+  const rarityData = useMemo(() => {
     const stats: Record<string, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
     inventory.forEach(id => {
        const item = COLLECTIBLES.find(c => c.id === id);
@@ -81,8 +95,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
       { name: 'Épico', value: stats.epic, color: '#A78BFA' },
       { name: 'Lendário', value: stats.legendary, color: '#FBBF24' }
     ].filter(i => i.value > 0);
-  };
-  const rarityData = getRarityStats();
+  }, [inventory]);
+
   const totalItems = inventory.length;
 
   return (
@@ -160,7 +174,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
               
               {Array(daysInMonth).fill(null).map((_, i) => {
                   const day = i + 1;
-                  const status = getDayStatus(day);
+                  const status = dayStatuses[day] || 'empty';
                   const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
                   
                   let bgClass = 'bg-gray-50 dark:bg-gray-800 text-gray-300';

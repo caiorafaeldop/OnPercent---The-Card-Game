@@ -10,20 +10,19 @@ import HolographicCard from './HolographicCard';
 
 interface ProfileProps {
   user: UserState;
-  customCards: Collectible[];
   unlockedAchievements: string[];
   onAddCredits: (amount: number) => void;
   onPullGacha: (newItemId: string) => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ user, customCards, unlockedAchievements, onAddCredits, onPullGacha }) => {
+const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCredits, onPullGacha }) => {
   const [lastReward, setLastReward] = useState<string | null>(null);
   const [viewCard, setViewCard] = useState<Collectible | null>(null);
   const [showBackupAlert, setShowBackupAlert] = useState(false);
   const [showCollection, setShowCollection] = useState(false);
   const [revealedCard, setRevealedCard] = useState<Collectible | null>(null);
   const [showReveal, setShowReveal] = useState(false);
-  const allCards = React.useMemo(() => [...COLLECTIBLES, ...customCards], [customCards]);
+  const allCards = COLLECTIBLES;
 
   const nextLevelXP = LEVEL_THRESHOLDS[user.level] || 100000;
   const currentLevelXP = LEVEL_THRESHOLDS[user.level - 1] || 0;
@@ -79,7 +78,6 @@ const Profile: React.FC<ProfileProps> = ({ user, customCards, unlockedAchievemen
 
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar pb-32">
-       
        <div className="px-1 pt-4">
             {showBackupAlert && (
                 <div className="bg-red-500 text-white p-4 rounded-xl shadow-lg animate-pulse mb-6">
