@@ -59,4 +59,12 @@ export interface UserState {
   mealHistory?: Record<string, number>; // YYYY-MM-DD -> count
 }
 
-export type Tab = 'habits' | 'dashboard' | 'journal' | 'profile';
+export type Tab = 'habits' | 'dashboard' | 'journal' | 'profile' | 'dcc';
+
+export interface DccCompletion {
+  checkedLeft: boolean;
+  checkedRight: boolean;
+}
+
+export type DccCompletionsState = Record<number, DccCompletion>;
+

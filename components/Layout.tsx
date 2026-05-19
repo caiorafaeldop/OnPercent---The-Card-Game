@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tab } from '../types';
-import { ListIcon, CalendarIcon, BookIcon, TrophyIcon, MoonIcon, SunIcon, SettingsIcon } from './Icons';
+import { ListIcon, CalendarIcon, BookIcon, TrophyIcon, MoonIcon, SunIcon, SettingsIcon, HeartIcon } from './Icons';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +16,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDar
     { id: 'habits', icon: <ListIcon className="w-6 h-6" />, label: 'Habitos' },
     { id: 'dashboard', icon: <CalendarIcon className="w-6 h-6" />, label: 'Dash' },
     { id: 'journal', icon: <BookIcon className="w-6 h-6" />, label: 'Diario' },
+    { id: 'dcc', icon: <HeartIcon className="w-6 h-6" />, label: 'DCC' },
     { id: 'profile', icon: <TrophyIcon className="w-6 h-6" />, label: 'Perfil' },
   ];
 

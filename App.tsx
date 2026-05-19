@@ -5,7 +5,8 @@ import Dashboard from './components/Dashboard';
 import Journal from './components/Journal';
 import Profile from './components/Profile';
 import DailyBonus from './components/DailyBonus';
-import { Habit, JournalEntry, UserState, Tab } from './types';
+import DccTab from './components/DccTab';
+import { Habit, JournalEntry, UserState, Tab, DccCompletionsState } from './types';
 import * as Storage from './services/storage';
 import * as Gamification from './services/gamification';
 import { GACHA_COST } from './services/gacha';
@@ -17,6 +18,7 @@ const App: React.FC = () => {
   
   const [habits, setHabits] = useState<Habit[]>([]);
   const [journal, setJournal] = useState<JournalEntry[]>([]);
+  const [dccCompletions, setDccCompletions] = useState<DccCompletionsState>({});
   const [user, setUser] = useState<UserState>({
     xp: 0,
     level: 1,
@@ -39,26 +41,33 @@ const App: React.FC = () => {
 
   // Initialization
   useEffect(() => {
-    setHabits(Storage.loadHabits());
-    setJournal(Storage.loadJournal());
-    const loadedUser = Storage.loadUser();
+    const init = async () => {
+      const [loadedHabits, loadedJournal, loadedUser] = await Promise.all([
+        Storage.loadHabits(),
+        Storage.loadJournal(),
+        Storage.loadUser()
+      ]);
+      const loadedDcc = Storage.loadDccCompletions();
 
-    // Check for daily reset of meals
-    const today = new Date().toDateString();
-    if (loadedUser.lastMealDate !== today) {
-        loadedUser.mealsToday = 0;
-        loadedUser.lastMealDate = today;
-        Storage.saveUser(loadedUser); // Save reset state
-    }
+      // Check for daily reset of meals
+      const today = new Date().toDateString();
+      if (loadedUser.lastMealDate !== today) {
+          loadedUser.mealsToday = 0;
+          loadedUser.lastMealDate = today;
+          Storage.saveUser(loadedUser); // Save reset state (fire-and-forget)
+      }
 
-    setUser(loadedUser);
-    
-    // Check initial achievements
-    const initialHabits = Storage.loadHabits();
-    const initialJournal = Storage.loadJournal();
-    const unlocked = Gamification.checkAchievements(loadedUser, initialHabits, initialJournal);
-    setUnlockedAchievements(unlocked);
-    setIsHydrated(true);
+      setHabits(loadedHabits);
+      setJournal(loadedJournal);
+      setDccCompletions(loadedDcc);
+      setUser(loadedUser);
+
+      // Check initial achievements
+      const unlocked = Gamification.checkAchievements(loadedUser, loadedHabits, loadedJournal);
+      setUnlockedAchievements(unlocked);
+      setIsHydrated(true);
+    };
+    init();
   }, []);
 
   // Theme Handling
@@ -75,17 +84,18 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!isHydrated) return;
 
+    // Fire-and-forget async saves
     Storage.saveHabits(habits);
     Storage.saveJournal(journal);
     Storage.saveUser(user);
+    Storage.saveDccCompletions(dccCompletions);
 
     const unlocked = Gamification.checkAchievements(user, habits, journal);
     if (unlocked.length > unlockedAchievements.length) {
-      // New achievement unlocked!
       setUnlockedAchievements(unlocked);
       console.log("Achievement Unlocked!");
     }
-  }, [habits, journal, user, unlockedAchievements, isHydrated]);
+  }, [habits, journal, user, dccCompletions, unlockedAchievements, isHydrated]);
 
   const addHabit = (title: string, difficulty: 'easy' | 'medium' | 'hard') => {
     const newHabit: Habit = {
@@ -240,6 +250,41 @@ const App: React.FC = () => {
       });
   };
 
+  const toggleDccItem = (id: number, side: 'left' | 'right') => {
+    setDccCompletions(prev => {
+      const current = prev[id] || { checkedLeft: false, checkedRight: false };
+      const wasBothChecked = current.checkedLeft && current.checkedRight;
+      
+      const updatedItem = {
+        ...current,
+        [side === 'left' ? 'checkedLeft' : 'checkedRight']: !current[side === 'left' ? 'checkedLeft' : 'checkedRight']
+      };
+      
+      const isBothChecked = updatedItem.checkedLeft && updatedItem.checkedRight;
+      
+      if (!wasBothChecked && isBothChecked) {
+        setUser(u => ({ ...u, credits: u.credits + 200 }));
+        import('./services/audio').then(({ soundService }) => {
+          soundService.playSuccess();
+        });
+      } else if (wasBothChecked && !isBothChecked) {
+        setUser(u => ({ ...u, credits: Math.max(0, u.credits - 200) }));
+        import('./services/audio').then(({ soundService }) => {
+          soundService.playClick();
+        });
+      } else {
+        import('./services/audio').then(({ soundService }) => {
+          soundService.playClick();
+        });
+      }
+
+      return {
+        ...prev,
+        [id]: updatedItem
+      };
+    });
+  };
+
   // --- Settings Handlers ---
   const handleBackup = () => {
       const data = Storage.exportData();
@@ -256,9 +301,9 @@ const App: React.FC = () => {
       });
   };
 
-  const handleRestore = () => {
+  const handleRestore = async () => {
       if (!restoreJson.trim()) return;
-      const success = Storage.importData(restoreJson);
+      const success = await Storage.importData(restoreJson);
       if (success) {
           alert("Progresso restaurado com sucesso!");
           window.location.reload();
@@ -283,6 +328,8 @@ const App: React.FC = () => {
         );
       case 'journal':
         return <Journal entries={journal} onSave={saveJournalEntry} />;
+      case 'dcc':
+        return <DccTab completions={dccCompletions} onToggleItem={toggleDccItem} />;
       case 'profile':
         return (
           <Profile 
