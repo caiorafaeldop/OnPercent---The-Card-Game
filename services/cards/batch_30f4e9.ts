@@ -1,4 +1,4 @@
-import { Collectible } from '../gacha';
+import { Collectible } from '../../types';
 
 export const batch_30f4e9: Collectible[] = [
   // COMMON CARDS

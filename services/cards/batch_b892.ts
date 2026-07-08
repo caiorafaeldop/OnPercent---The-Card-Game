@@ -1,4 +1,4 @@
-import { Collectible } from '../gacha';
+import { Collectible } from '../../types';
 
 const batch_b892: Collectible[] = [
   {

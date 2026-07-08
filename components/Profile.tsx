@@ -69,7 +69,7 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
     const data = exportData();
     navigator.clipboard.writeText(data).then(() => {
       alert("Dados copiados! O app de email abrirá. Cole o conteúdo e envie para você mesmo.");
-      window.location.href = "mailto:?subject=Onpercent%20Backup&body=COLE%20OS%20DADOS%20AQUI";
+      window.location.href = "mailto:?subject=1%20porcento%20Backup&body=COLE%20OS%20DADOS%20AQUI";
       const updatedUser = { ...user, lastBackupDate: new Date().toISOString() };
       saveUser(updatedUser);
       setShowBackupAlert(false);

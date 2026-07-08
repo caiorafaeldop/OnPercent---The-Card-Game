@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DccCompletionsState } from '../types';
+import { DccCompletionsState, DccCompletion } from '../types';
 
 interface DccTabProps {
   completions: DccCompletionsState;
@@ -54,7 +54,7 @@ const DCC_TEMAS = [
 const DccTab: React.FC<DccTabProps> = ({ completions, onToggleItem }) => {
   const completedCount = useMemo(() => {
     return Object.values(completions).filter(
-      (item) => item.checkedLeft && item.checkedRight
+      (item) => (item as DccCompletion).checkedLeft && (item as DccCompletion).checkedRight
     ).length;
   }, [completions]);
 

@@ -1,11 +1,32 @@
 import { Habit, JournalEntry, UserState, DccCompletionsState } from '../types';
 
 const KEYS = {
+  HABITS: '1porcento_habits',
+  JOURNAL: '1porcento_journal',
+  USER: '1porcento_user',
+  THEME: '1porcento_theme',
+  DCC: '1porcento_dcc'
+};
+
+const OLD_KEYS = {
   HABITS: 'onpercent_habits',
   JOURNAL: 'onpercent_journal',
   USER: 'onpercent_user',
   THEME: 'onpercent_theme',
   DCC: 'onpercent_dcc'
+};
+
+const getLocalStorageItem = (key: string, oldKey: string): string | null => {
+  const val = localStorage.getItem(key);
+  if (val !== null) return val;
+  
+  const oldVal = localStorage.getItem(oldKey);
+  if (oldVal !== null) {
+    localStorage.setItem(key, oldVal);
+    localStorage.removeItem(oldKey);
+    return oldVal;
+  }
+  return null;
 };
 
 const API_BASE = '/api';
@@ -32,7 +53,7 @@ export const loadHabits = async (): Promise<Habit[]> => {
   } catch (err) {
     console.warn('Backend unreachable for habits, using local cache:', err);
   }
-  return safeJsonParse<Habit[]>(localStorage.getItem(KEYS.HABITS), []);
+  return safeJsonParse<Habit[]>(getLocalStorageItem(KEYS.HABITS, OLD_KEYS.HABITS), []);
 };
 
 export const saveHabits = async (habits: Habit[]): Promise<void> => {
@@ -59,7 +80,7 @@ export const loadJournal = async (): Promise<JournalEntry[]> => {
   } catch (err) {
     console.warn('Backend unreachable for journal, using local cache:', err);
   }
-  return safeJsonParse<JournalEntry[]>(localStorage.getItem(KEYS.JOURNAL), []);
+  return safeJsonParse<JournalEntry[]>(getLocalStorageItem(KEYS.JOURNAL, OLD_KEYS.JOURNAL), []);
 };
 
 export const saveJournal = async (entries: JournalEntry[]): Promise<void> => {
@@ -99,7 +120,7 @@ export const loadUser = async (): Promise<UserState> => {
     console.warn('Backend unreachable for user, using local cache:', err);
   }
 
-  const parsed = safeJsonParse<Partial<UserState>>(localStorage.getItem(KEYS.USER), {});
+  const parsed = safeJsonParse<Partial<UserState>>(getLocalStorageItem(KEYS.USER, OLD_KEYS.USER), {});
   return { ...defaultUser, ...parsed };
 };
 
@@ -119,7 +140,7 @@ export const saveUser = async (user: UserState): Promise<void> => {
 // --- Sync-only (theme and DCC stay in localStorage, no backend needed) ---
 
 export const loadTheme = (): boolean => {
-  return localStorage.getItem(KEYS.THEME) === 'dark';
+  return getLocalStorageItem(KEYS.THEME, OLD_KEYS.THEME) === 'dark';
 };
 
 export const saveTheme = (isDark: boolean) => {
@@ -127,7 +148,7 @@ export const saveTheme = (isDark: boolean) => {
 };
 
 export const loadDccCompletions = (): DccCompletionsState => {
-  return safeJsonParse<DccCompletionsState>(localStorage.getItem(KEYS.DCC), {});
+  return safeJsonParse<DccCompletionsState>(getLocalStorageItem(KEYS.DCC, OLD_KEYS.DCC), {});
 };
 
 export const saveDccCompletions = (completions: DccCompletionsState) => {
@@ -137,10 +158,10 @@ export const saveDccCompletions = (completions: DccCompletionsState) => {
 // Backup Utilities (use local cache for instant export)
 export const exportData = (): string => {
   const data = {
-    user: safeJsonParse<UserState>(localStorage.getItem(KEYS.USER), {} as UserState),
-    habits: safeJsonParse<Habit[]>(localStorage.getItem(KEYS.HABITS), []),
-    journal: safeJsonParse<JournalEntry[]>(localStorage.getItem(KEYS.JOURNAL), []),
-    dcc: safeJsonParse<DccCompletionsState>(localStorage.getItem(KEYS.DCC), {}),
+    user: safeJsonParse<UserState>(getLocalStorageItem(KEYS.USER, OLD_KEYS.USER), {} as UserState),
+    habits: safeJsonParse<Habit[]>(getLocalStorageItem(KEYS.HABITS, OLD_KEYS.HABITS), []),
+    journal: safeJsonParse<JournalEntry[]>(getLocalStorageItem(KEYS.JOURNAL, OLD_KEYS.JOURNAL), []),
+    dcc: safeJsonParse<DccCompletionsState>(getLocalStorageItem(KEYS.DCC, OLD_KEYS.DCC), {}),
     theme: loadTheme(),
     timestamp: new Date().toISOString()
   };
