@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "concurrently \"npm run server\" \"vite\"",
     "server": "npm run dev --prefix backend",
-    "build": "vite build",
+    "build": "vite build && npm run build --prefix backend",
+    "start": "node backend/dist/index.js",
     "preview": "vite preview"
+
   },
   "dependencies": {
     "@google/genai": "^1.38.0",

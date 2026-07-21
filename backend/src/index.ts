@@ -2,7 +2,8 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
-import { initializeDatabase } from './db.js';
+import { serveStatic } from '@hono/node-server/serve-static';
+import { initializeDatabase, isDatabaseMode } from './db.js';
 import { 
   getHabits, 
   saveHabits, 
@@ -20,14 +21,22 @@ const app = new Hono();
 // Middleware
 app.use('*', logger());
 app.use('*', cors({
-  origin: '*', // We can restrict this or allow wildcard for easy frontend local connections
+  origin: '*',
   allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'Authorization'],
   exposeHeaders: ['Content-Length'],
   maxAge: 600
 }));
 
-// Route mappings
+// API Routes
+app.get('/api/health', (c) => {
+  return c.json({
+    status: 'ok',
+    databaseMode: isDatabaseMode,
+    timestamp: new Date().toISOString()
+  });
+});
+
 app.get('/api/habits', async (c) => {
   try {
     const habits = await getHabits();
@@ -91,16 +100,26 @@ app.post('/api/user', async (c) => {
   }
 });
 
-// Root check
-app.get('/', (c) => c.text('1 porcento API is running!'));
+// Serve Static Frontend (Monolith Mode)
+app.use('/assets/*', serveStatic({ root: './dist' }));
+app.use('/assets/*', serveStatic({ root: '../dist' }));
+app.use('/favicon.ico', serveStatic({ root: './dist' }));
+app.use('/favicon.ico', serveStatic({ root: '../dist' }));
+app.use('/*', serveStatic({ root: './dist' }));
+app.use('/*', serveStatic({ root: '../dist' }));
+
+// SPA Fallback for non-API routes
+app.get('*', serveStatic({ root: './dist', path: 'index.html' }));
+app.get('*', serveStatic({ root: '../dist', path: 'index.html' }));
 
 const port = Number(process.env.PORT) || 3001;
 
 // Init DB and Start Server
 initializeDatabase().then(() => {
-  console.log(`Starting server on port ${port}...`);
+  console.log(`Starting Monolithic Server on port ${port}...`);
   serve({
     fetch: app.fetch,
     port: port
   });
 });
+

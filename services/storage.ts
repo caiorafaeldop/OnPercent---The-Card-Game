@@ -29,7 +29,8 @@ const getLocalStorageItem = (key: string, oldKey: string): string | null => {
   return null;
 };
 
-const API_BASE = '/api';
+const API_BASE = (import.meta.env.VITE_API_URL ? `${import.meta.env.VITE_API_URL}/api` : '/api').replace(/\/+/g, '/').replace(':/', '://');
+
 
 const safeJsonParse = <T,>(raw: string | null, fallback: T): T => {
   if (!raw) return fallback;
