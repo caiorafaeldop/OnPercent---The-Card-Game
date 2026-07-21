@@ -71,10 +71,19 @@ export async function initializeDatabase() {
         );
       `);
 
+      // 4. DCC Completions Table
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS dcc_completions (
+          id VARCHAR(50) PRIMARY KEY,
+          data JSONB NOT NULL DEFAULT '{}'::jsonb
+        );
+      `);
+
       console.log('Database schemas successfully initialized / verified.');
     } finally {
       client.release();
     }
+
   } catch (err) {
     console.error('Database connection failed. Reverting to Local Mode.', err);
     isDatabaseMode = false;

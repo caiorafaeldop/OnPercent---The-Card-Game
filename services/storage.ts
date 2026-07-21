@@ -148,13 +148,33 @@ export const saveTheme = (isDark: boolean) => {
   localStorage.setItem(KEYS.THEME, isDark ? 'dark' : 'light');
 };
 
-export const loadDccCompletions = (): DccCompletionsState => {
+export const loadDccCompletions = async (): Promise<DccCompletionsState> => {
+  try {
+    const res = await fetch(`${API_BASE}/dcc`);
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem(KEYS.DCC, JSON.stringify(data));
+      return data;
+    }
+  } catch (err) {
+    console.warn('Backend unreachable for DCC completions, using local cache:', err);
+  }
   return safeJsonParse<DccCompletionsState>(getLocalStorageItem(KEYS.DCC, OLD_KEYS.DCC), {});
 };
 
-export const saveDccCompletions = (completions: DccCompletionsState) => {
+export const saveDccCompletions = async (completions: DccCompletionsState): Promise<void> => {
   localStorage.setItem(KEYS.DCC, JSON.stringify(completions));
+  try {
+    await fetch(`${API_BASE}/dcc`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(completions)
+    });
+  } catch (err) {
+    console.warn('Backend unreachable for saving DCC completions:', err);
+  }
 };
+
 
 // Backup Utilities (use local cache for instant export)
 export const exportData = (): string => {

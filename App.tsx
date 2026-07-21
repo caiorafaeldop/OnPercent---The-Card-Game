@@ -42,12 +42,13 @@ const App: React.FC = () => {
   // Initialization
   useEffect(() => {
     const init = async () => {
-      const [loadedHabits, loadedJournal, loadedUser] = await Promise.all([
+      const [loadedHabits, loadedJournal, loadedUser, loadedDcc] = await Promise.all([
         Storage.loadHabits(),
         Storage.loadJournal(),
-        Storage.loadUser()
+        Storage.loadUser(),
+        Storage.loadDccCompletions()
       ]);
-      const loadedDcc = Storage.loadDccCompletions();
+
 
       // Check for daily reset of meals
       const today = new Date().toDateString();

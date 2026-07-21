@@ -221,3 +221,37 @@ export async function saveUser(user: UserState): Promise<void> {
   }
   await writeLocalFile<UserState>('user.json', user);
 }
+
+// DCC Completions Persistence
+export async function getDcc(): Promise<Record<string, any>> {
+  if (isDatabaseMode && pool) {
+    try {
+      const res = await pool.query('SELECT data FROM dcc_completions WHERE id = $1', ['default']);
+      if (res.rows.length > 0) {
+        const data = res.rows[0].data;
+        return typeof data === 'string' ? JSON.parse(data) : data || {};
+      }
+    } catch (err) {
+      console.error('Failed to load DCC from DB, using local fallback:', err);
+    }
+  }
+  return readLocalFile<Record<string, any>>('dcc.json', {});
+}
+
+export async function saveDcc(completions: Record<string, any>): Promise<void> {
+  if (isDatabaseMode && pool) {
+    try {
+      await pool.query(
+        `INSERT INTO dcc_completions (id, data)
+         VALUES ($1, $2)
+         ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data`,
+        ['default', JSON.stringify(completions)]
+      );
+      return;
+    } catch (err) {
+      console.error('Failed to save DCC to DB, using local fallback:', err);
+    }
+  }
+  await writeLocalFile<Record<string, any>>('dcc.json', completions);
+}
+

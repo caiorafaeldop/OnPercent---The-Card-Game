@@ -11,10 +11,13 @@ import {
   saveJournal, 
   getUser, 
   saveUser,
+  getDcc,
+  saveDcc,
   Habit,
   JournalEntry,
   UserState
 } from './persistence.js';
+
 
 const app = new Hono();
 
@@ -99,6 +102,28 @@ app.post('/api/user', async (c) => {
     return c.json({ error: 'Internal Server Error' }, 500);
   }
 });
+
+app.get('/api/dcc', async (c) => {
+  try {
+    const dcc = await getDcc();
+    return c.json(dcc);
+  } catch (err) {
+    console.error('Error fetching dcc:', err);
+    return c.json({ error: 'Internal Server Error' }, 500);
+  }
+});
+
+app.post('/api/dcc', async (c) => {
+  try {
+    const body = await c.req.json<Record<string, any>>();
+    await saveDcc(body);
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('Error saving dcc:', err);
+    return c.json({ error: 'Internal Server Error' }, 500);
+  }
+});
+
 
 // Serve Static Frontend (Monolith Mode)
 app.use('/assets/*', serveStatic({ root: './dist' }));
