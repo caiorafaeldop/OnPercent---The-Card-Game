@@ -1,12 +1,14 @@
-import { Habit, JournalEntry, UserState, DccCompletionsState } from '../types';
+import { Habit, JournalEntry, UserState, DccCompletionsState, Devotional } from '../types';
 
 const KEYS = {
   HABITS: '1porcento_habits',
   JOURNAL: '1porcento_journal',
   USER: '1porcento_user',
   THEME: '1porcento_theme',
-  DCC: '1porcento_dcc'
+  DCC: '1porcento_dcc',
+  DEVOTIONALS: '1porcento_devotionals'
 };
+
 
 const OLD_KEYS = {
   HABITS: 'onpercent_habits',
@@ -174,6 +176,42 @@ export const saveDccCompletions = async (completions: DccCompletionsState): Prom
     console.warn('Backend unreachable for saving DCC completions:', err);
   }
 };
+
+export const loadDevotionals = async (): Promise<Devotional[]> => {
+  try {
+    const res = await fetch(`${API_BASE}/devotionals`);
+    if (res.ok) {
+      const data = await res.json();
+      localStorage.setItem(KEYS.DEVOTIONALS, JSON.stringify(data));
+      return data;
+    }
+  } catch (err) {
+    console.warn('Backend unreachable for devotionals, using local cache:', err);
+  }
+  return safeJsonParse<Devotional[]>(localStorage.getItem(KEYS.DEVOTIONALS), []);
+};
+
+export const saveDevotional = async (devotional: Devotional): Promise<void> => {
+  const current = safeJsonParse<Devotional[]>(localStorage.getItem(KEYS.DEVOTIONALS), []);
+  const idx = current.findIndex(d => d.id === devotional.id);
+  if (idx >= 0) {
+    current[idx] = devotional;
+  } else {
+    current.push(devotional);
+  }
+  localStorage.setItem(KEYS.DEVOTIONALS, JSON.stringify(current));
+
+  try {
+    await fetch(`${API_BASE}/devotionals`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(devotional)
+    });
+  } catch (err) {
+    console.warn('Backend unreachable for saving devotional:', err);
+  }
+};
+
 
 
 // Backup Utilities (use local cache for instant export)

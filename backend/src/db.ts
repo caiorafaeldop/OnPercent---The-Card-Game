@@ -57,8 +57,14 @@ export async function initializeDatabase() {
           title VARCHAR(255) NOT NULL,
           difficulty VARCHAR(20) NOT NULL,
           created_at VARCHAR(50) NOT NULL,
-          completed_dates JSONB NOT NULL DEFAULT '[]'::jsonb
+          completed_dates JSONB NOT NULL DEFAULT '[]'::jsonb,
+          owner VARCHAR(20) DEFAULT 'caio'
         );
+      `);
+
+      // Ensure owner column exists if table was created previously
+      await client.query(`
+        ALTER TABLE habits ADD COLUMN IF NOT EXISTS owner VARCHAR(20) DEFAULT 'caio';
       `);
 
       // 3. Journal Table
@@ -71,7 +77,7 @@ export async function initializeDatabase() {
         );
       `);
 
-      // 4. DCC Completions Table
+      // 4. DCC Completions Table (legacy support)
       await client.query(`
         CREATE TABLE IF NOT EXISTS dcc_completions (
           id VARCHAR(50) PRIMARY KEY,
@@ -79,10 +85,27 @@ export async function initializeDatabase() {
         );
       `);
 
+      // 5. Devotionals Table (Fé)
+      await client.query(`
+        CREATE TABLE IF NOT EXISTS devotionals (
+          id VARCHAR(50) PRIMARY KEY,
+          theme VARCHAR(255) NOT NULL,
+          verse_reference VARCHAR(100) NOT NULL,
+          verse_text TEXT NOT NULL,
+          reflection_prompt TEXT,
+          completed_by_caio BOOLEAN NOT NULL DEFAULT FALSE,
+          completed_by_analaura BOOLEAN NOT NULL DEFAULT FALSE,
+          caio_note TEXT,
+          analaura_note TEXT,
+          created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        );
+      `);
+
       console.log('Database schemas successfully initialized / verified.');
     } finally {
       client.release();
     }
+
 
   } catch (err) {
     console.error('Database connection failed. Reverting to Local Mode.', err);

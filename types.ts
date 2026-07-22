@@ -4,6 +4,7 @@ export interface Habit {
   difficulty: 'easy' | 'medium' | 'hard';
   createdAt: string; // ISO Date
   completedDates: string[]; // Array of YYYY-MM-DD
+  owner?: 'caio' | 'analaura';
 }
 
 export interface JournalEntry {
@@ -59,7 +60,20 @@ export interface UserState {
   mealHistory?: Record<string, number>; // YYYY-MM-DD -> count
 }
 
-export type Tab = 'habits' | 'dashboard' | 'journal' | 'profile' | 'dcc';
+export type Tab = 'habits' | 'dashboard' | 'journal' | 'profile' | 'fe';
+
+export interface Devotional {
+  id: string;
+  theme: string;
+  verseReference: string;
+  verseText: string;
+  reflectionPrompt?: string;
+  completedByCaio: boolean;
+  completedByAnalaura: boolean;
+  caioNote?: string;
+  analauraNote?: string;
+  createdAt: string;
+}
 
 export interface DccCompletion {
   checkedLeft: boolean;
@@ -67,4 +81,5 @@ export interface DccCompletion {
 }
 
 export type DccCompletionsState = Record<number, DccCompletion>;
+
 

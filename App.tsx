@@ -5,8 +5,8 @@ import Dashboard from './components/Dashboard';
 import Journal from './components/Journal';
 import Profile from './components/Profile';
 import DailyBonus from './components/DailyBonus';
-import DccTab from './components/DccTab';
-import { Habit, JournalEntry, UserState, Tab, DccCompletionsState } from './types';
+import { FeDevocional } from './components/FeDevocional';
+import { Habit, JournalEntry, UserState, Tab, DccCompletionsState, Devotional } from './types';
 import * as Storage from './services/storage';
 import * as Gamification from './services/gamification';
 import { GACHA_COST } from './services/gacha';
@@ -18,6 +18,7 @@ const App: React.FC = () => {
   
   const [habits, setHabits] = useState<Habit[]>([]);
   const [journal, setJournal] = useState<JournalEntry[]>([]);
+  const [devotionals, setDevotionals] = useState<Devotional[]>([]);
   const [dccCompletions, setDccCompletions] = useState<DccCompletionsState>({});
   const [user, setUser] = useState<UserState>({
     xp: 0,
@@ -42,11 +43,12 @@ const App: React.FC = () => {
   // Initialization
   useEffect(() => {
     const init = async () => {
-      const [loadedHabits, loadedJournal, loadedUser, loadedDcc] = await Promise.all([
+      const [loadedHabits, loadedJournal, loadedUser, loadedDcc, loadedDevotionals] = await Promise.all([
         Storage.loadHabits(),
         Storage.loadJournal(),
         Storage.loadUser(),
-        Storage.loadDccCompletions()
+        Storage.loadDccCompletions(),
+        Storage.loadDevotionals()
       ]);
 
 
@@ -61,6 +63,7 @@ const App: React.FC = () => {
       setHabits(loadedHabits);
       setJournal(loadedJournal);
       setDccCompletions(loadedDcc);
+      setDevotionals(loadedDevotionals);
       setUser(loadedUser);
 
       // Check initial achievements
@@ -98,11 +101,12 @@ const App: React.FC = () => {
     }
   }, [habits, journal, user, dccCompletions, unlockedAchievements, isHydrated]);
 
-  const addHabit = (title: string, difficulty: 'easy' | 'medium' | 'hard') => {
+  const addHabit = (title: string, difficulty: 'easy' | 'medium' | 'hard', owner: 'caio' | 'analaura' = 'caio') => {
     const newHabit: Habit = {
       id: Date.now().toString(),
       title,
       difficulty,
+      owner,
       createdAt: new Date().toISOString(),
       completedDates: []
     };
@@ -313,6 +317,17 @@ const App: React.FC = () => {
       }
   };
 
+  const handleUpdateDevotional = (updated: Devotional) => {
+    const updatedList = devotionals.map(d => d.id === updated.id ? updated : d);
+    setDevotionals(updatedList);
+    Storage.saveDevotional(updated);
+  };
+
+  const handleAddDevotional = (newDev: Devotional) => {
+    setDevotionals([...devotionals, newDev]);
+    Storage.saveDevotional(newDev);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'habits':
@@ -329,8 +344,14 @@ const App: React.FC = () => {
         );
       case 'journal':
         return <Journal entries={journal} onSave={saveJournalEntry} />;
-      case 'dcc':
-        return <DccTab completions={dccCompletions} onToggleItem={toggleDccItem} />;
+      case 'fe':
+        return (
+          <FeDevocional
+            devotionals={devotionals}
+            onUpdateDevotional={handleUpdateDevotional}
+            onAddDevotional={handleAddDevotional}
+          />
+        );
       case 'profile':
         return (
           <Profile 
@@ -344,6 +365,7 @@ const App: React.FC = () => {
         return <HabitList habits={habits} onAdd={addHabit} onToggle={toggleHabit} onDelete={deleteHabit} />;
     }
   };
+
 
   return (
     <Layout 

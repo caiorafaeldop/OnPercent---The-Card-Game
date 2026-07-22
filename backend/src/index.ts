@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { initializeDatabase, isDatabaseMode } from './db.js';
+import { seedDevotionals } from './seed.js';
 import { 
   getHabits, 
   saveHabits, 
@@ -13,9 +14,12 @@ import {
   saveUser,
   getDcc,
   saveDcc,
+  getDevotionals,
+  saveDevotional,
   Habit,
   JournalEntry,
-  UserState
+  UserState,
+  Devotional
 } from './persistence.js';
 
 const app = new Hono();
@@ -123,6 +127,28 @@ app.post('/api/dcc', async (c: Context) => {
   }
 });
 
+// Devotionals (Fé) Routes
+app.get('/api/devotionals', async (c: Context) => {
+  try {
+    const devotionals = await getDevotionals();
+    return c.json(devotionals);
+  } catch (err) {
+    console.error('Error fetching devotionals:', err);
+    return c.json({ error: 'Internal Server Error' }, 500);
+  }
+});
+
+app.post('/api/devotionals', async (c: Context) => {
+  try {
+    const body = await c.req.json<Devotional>();
+    await saveDevotional(body);
+    return c.json({ success: true });
+  } catch (err) {
+    console.error('Error saving devotional:', err);
+    return c.json({ error: 'Internal Server Error' }, 500);
+  }
+});
+
 // Serve Static Frontend (Monolith Mode)
 app.use('/assets/*', serveStatic({ root: './dist' }));
 app.use('/assets/*', serveStatic({ root: '../dist' }));
@@ -135,15 +161,16 @@ app.use('/*', serveStatic({ root: '../dist' }));
 app.get('*', serveStatic({ root: './dist', path: 'index.html' }));
 app.get('*', serveStatic({ root: '../dist', path: 'index.html' }));
 
-
 const port = Number(process.env.PORT) || 3001;
 
 // Init DB and Start Server
-initializeDatabase().then(() => {
+initializeDatabase().then(async () => {
+  await seedDevotionals();
   console.log(`Starting Monolithic Server on port ${port}...`);
   serve({
     fetch: app.fetch,
     port: port
   });
 });
+
 

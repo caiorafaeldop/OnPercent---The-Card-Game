@@ -16,9 +16,10 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDar
     { id: 'habits', icon: <ListIcon className="w-6 h-6" />, label: 'Habitos' },
     { id: 'dashboard', icon: <CalendarIcon className="w-6 h-6" />, label: 'Dash' },
     { id: 'journal', icon: <BookIcon className="w-6 h-6" />, label: 'Diario' },
-    { id: 'dcc', icon: <HeartIcon className="w-6 h-6" />, label: 'DCC' },
+    { id: 'fe', icon: <HeartIcon className="w-6 h-6 text-pink-500 fill-pink-500" />, label: 'Fé' },
     { id: 'profile', icon: <TrophyIcon className="w-6 h-6" />, label: 'Perfil' },
   ];
+
 
   return (
     <div className="h-screen w-full overflow-hidden flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors duration-300">

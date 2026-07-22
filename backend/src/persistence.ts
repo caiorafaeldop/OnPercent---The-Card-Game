@@ -14,6 +14,20 @@ export interface Habit {
   difficulty: 'easy' | 'medium' | 'hard';
   createdAt: string;
   completedDates: string[];
+  owner?: 'caio' | 'analaura';
+}
+
+export interface Devotional {
+  id: string;
+  theme: string;
+  verseReference: string;
+  verseText: string;
+  reflectionPrompt?: string;
+  completedByCaio: boolean;
+  completedByAnalaura: boolean;
+  caioNote?: string;
+  analauraNote?: string;
+  createdAt?: string;
 }
 
 export interface JournalEntry {
@@ -22,6 +36,7 @@ export interface JournalEntry {
   content: string;
   rating: number;
 }
+
 
 export interface UserState {
   xp: number;
@@ -72,7 +87,8 @@ export async function getHabits(): Promise<Habit[]> {
         createdAt: row.created_at,
         completedDates: typeof row.completed_dates === 'string' 
           ? JSON.parse(row.completed_dates) 
-          : row.completed_dates || []
+          : row.completed_dates || [],
+        owner: (row.owner as 'caio' | 'analaura') || 'caio'
       }));
     } catch (err) {
       console.error('Failed to load habits from DB, using local fallback:', err);
@@ -89,8 +105,8 @@ export async function saveHabits(habits: Habit[]): Promise<void> {
       await client.query('DELETE FROM habits');
       for (const h of habits) {
         await client.query(
-          'INSERT INTO habits (id, title, difficulty, created_at, completed_dates) VALUES ($1, $2, $3, $4, $5)',
-          [h.id, h.title, h.difficulty, h.createdAt, JSON.stringify(h.completedDates)]
+          'INSERT INTO habits (id, title, difficulty, created_at, completed_dates, owner) VALUES ($1, $2, $3, $4, $5, $6)',
+          [h.id, h.title, h.difficulty, h.createdAt, JSON.stringify(h.completedDates), h.owner || 'caio']
         );
       }
       await client.query('COMMIT');
@@ -104,6 +120,7 @@ export async function saveHabits(habits: Habit[]): Promise<void> {
   }
   await writeLocalFile<Habit[]>('habits.json', habits);
 }
+
 
 // Journal Persistence
 export async function getJournal(): Promise<JournalEntry[]> {
@@ -255,4 +272,72 @@ export async function saveDcc(completions: Record<string, any>): Promise<void> {
   }
   await writeLocalFile<Record<string, any>>('dcc.json', completions);
 }
+
+// Devotionals Persistence (Fé)
+export async function getDevotionals(): Promise<Devotional[]> {
+  if (isDatabaseMode && pool) {
+    try {
+      const res = await pool.query('SELECT * FROM devotionals ORDER BY created_at ASC');
+      return res.rows.map((row: any) => ({
+        id: row.id,
+        theme: row.theme,
+        verseReference: row.verse_reference,
+        verseText: row.verse_text,
+        reflectionPrompt: row.reflection_prompt,
+        completedByCaio: row.completed_by_caio,
+        completedByAnalaura: row.completed_by_analaura,
+        caioNote: row.caio_note,
+        analauraNote: row.analaura_note,
+        createdAt: row.created_at
+      }));
+    } catch (err) {
+      console.error('Failed to load devotionals from DB, using local fallback:', err);
+    }
+  }
+  return readLocalFile<Devotional[]>('devotionals.json', []);
+}
+
+export async function saveDevotional(devotional: Devotional): Promise<void> {
+  if (isDatabaseMode && pool) {
+    try {
+      await pool.query(
+        `INSERT INTO devotionals (id, theme, verse_reference, verse_text, reflection_prompt, completed_by_caio, completed_by_analaura, caio_note, analaura_note)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+         ON CONFLICT (id) DO UPDATE SET
+           theme = EXCLUDED.theme,
+           verse_reference = EXCLUDED.verse_reference,
+           verse_text = EXCLUDED.verse_text,
+           reflection_prompt = EXCLUDED.reflection_prompt,
+           completed_by_caio = EXCLUDED.completed_by_caio,
+           completed_by_analaura = EXCLUDED.completed_by_analaura,
+           caio_note = EXCLUDED.caio_note,
+           analaura_note = EXCLUDED.analaura_note`,
+        [
+          devotional.id,
+          devotional.theme,
+          devotional.verseReference,
+          devotional.verseText,
+          devotional.reflectionPrompt || '',
+          devotional.completedByCaio || false,
+          devotional.completedByAnalaura || false,
+          devotional.caioNote || null,
+          devotional.analauraNote || null
+        ]
+      );
+      return;
+    } catch (err) {
+      console.error('Failed to save devotional to DB, using local fallback:', err);
+    }
+  }
+
+  const existing = await readLocalFile<Devotional[]>('devotionals.json', []);
+  const idx = existing.findIndex(d => d.id === devotional.id);
+  if (idx >= 0) {
+    existing[idx] = devotional;
+  } else {
+    existing.push(devotional);
+  }
+  await writeLocalFile<Devotional[]>('devotionals.json', existing);
+}
+
 
