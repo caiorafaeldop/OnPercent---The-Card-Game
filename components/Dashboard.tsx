@@ -18,6 +18,7 @@ interface DashboardProps {
 const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordMeal, onUpdateMeal }) => {
     const { xp, level, inventory } = user;
     const [selectedHabitId, setSelectedHabitId] = useState<string>('all');
+    const [ownerFilter, setOwnerFilter] = useState<'all' | 'caio' | 'analaura'>('all');
     const [viewCardId, setViewCardId] = useState<string | null>(null);
     const [showMealHistory, setShowMealHistory] = useState(false);
     const [historyDate, setHistoryDate] = useState(new Date());
@@ -27,10 +28,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
   const [viewDate, setViewDate] = useState(new Date());
 
   const filteredHabits = useMemo(() => {
-    return selectedHabitId === 'all' 
-      ? habits 
-      : habits.filter(h => h.id === selectedHabitId);
-  }, [habits, selectedHabitId]);
+    let list = habits;
+    if (ownerFilter !== 'all') {
+      list = list.filter(h => (h.owner || 'caio') === ownerFilter);
+    }
+    if (selectedHabitId !== 'all') {
+      list = list.filter(h => h.id === selectedHabitId);
+    }
+    return list;
+  }, [habits, selectedHabitId, ownerFilter]);
 
   // Calculate Streak Stats
   const currentStreak = useMemo(() => {
@@ -58,28 +64,25 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
   const handleNextMonth = () => setViewDate(new Date(currentYear, currentMonth + 1, 1));
 
   // Compute status for all days in the current month once
+  // Caio = Azul | Analaura = Rosa | Ambos = Roxo (Mistura de azul + rosa)
   const dayStatuses = useMemo(() => {
-    const statuses: Record<number, string> = {};
+    const statuses: Record<number, { caio: boolean; analaura: boolean; totalCompleted: number }> = {};
     for (let day = 1; day <= daysInMonth; day++) {
       const dateObj = new Date(currentYear, currentMonth, day);
       const dateStr = dateObj.toLocaleDateString('en-CA');
       
-      const completedCount = filteredHabits.filter(h => h.completedDates.includes(dateStr)).length;
-      
-      if (completedCount === 0) {
-        statuses[day] = 'empty';
-      } else if (selectedHabitId !== 'all') {
-        statuses[day] = 'completed';
-      } else if (completedCount === filteredHabits.length && filteredHabits.length > 0) {
-        statuses[day] = 'perfect';
-      } else if (completedCount > filteredHabits.length / 2) {
-        statuses[day] = 'good';
-      } else {
-        statuses[day] = 'some';
-      }
+      const dayHabits = filteredHabits.filter(h => h.completedDates.includes(dateStr));
+      const caioDone = dayHabits.some(h => (h.owner || 'caio') === 'caio');
+      const analauraDone = dayHabits.some(h => h.owner === 'analaura');
+
+      statuses[day] = {
+        caio: caioDone,
+        analaura: analauraDone,
+        totalCompleted: dayHabits.length
+      };
     }
     return statuses;
-  }, [currentYear, currentMonth, daysInMonth, filteredHabits, selectedHabitId]);
+  }, [currentYear, currentMonth, daysInMonth, filteredHabits]);
   
   const rarityData = useMemo(() => {
     const stats: Record<string, number> = { common: 0, rare: 0, epic: 0, legendary: 0 };
@@ -130,21 +133,54 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
       <div>
         <div className="flex justify-between items-center mb-4">
              <h3 className="text-lg font-black uppercase tracking-tighter">Atividade</h3>
-             <div className="relative">
-                 <select 
-                    value={selectedHabitId}
-                    onChange={(e) => {
-                        setSelectedHabitId(e.target.value);
-                        soundService.playClick();
+             
+             <div className="flex items-center gap-2">
+                 {/* Dual Color Ball Filter (Metade Azul/Rosa -> Toda Azul -> Toda Rosa) */}
+                 <button
+                    type="button"
+                    onClick={() => {
+                      soundService.playClick();
+                      setOwnerFilter(prev => prev === 'all' ? 'caio' : prev === 'caio' ? 'analaura' : 'all');
                     }}
-                    className="p-2 pr-8 rounded-lg bg-gray-100 dark:bg-gray-900 border-none text-xs font-bold appearance-none cursor-pointer focus:ring-2 focus:ring-orange-500"
+                    title={
+                      ownerFilter === 'all' 
+                        ? 'Todos (Clique para Caio)' 
+                        : ownerFilter === 'caio' 
+                        ? 'Apenas Caio (Clique para Analaura)' 
+                        : 'Apenas Analaura (Clique para Todos)'
+                    }
+                    className="relative w-7 h-7 rounded-full border border-gray-300 dark:border-gray-700 overflow-hidden shadow-sm hover:scale-110 active:scale-95 transition-all duration-300 flex-shrink-0 cursor-pointer"
                  >
-                    <option value="all">Todos os Projetos</option>
-                    {habits.map(h => (
-                        <option key={h.id} value={h.id}>{h.title}</option>
-                    ))}
-                 </select>
-                 <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 text-[10px]">▼</div>
+                    {ownerFilter === 'all' && (
+                      <div className="w-full h-full flex">
+                        <div className="w-1/2 h-full bg-blue-500" />
+                        <div className="w-1/2 h-full bg-pink-500" />
+                      </div>
+                    )}
+                    {ownerFilter === 'caio' && (
+                      <div className="w-full h-full bg-blue-500 ring-2 ring-blue-300" />
+                    )}
+                    {ownerFilter === 'analaura' && (
+                      <div className="w-full h-full bg-pink-500 ring-2 ring-pink-300" />
+                    )}
+                 </button>
+
+                 <div className="relative">
+                     <select 
+                        value={selectedHabitId}
+                        onChange={(e) => {
+                            setSelectedHabitId(e.target.value);
+                            soundService.playClick();
+                        }}
+                        className="p-2 pr-8 rounded-lg bg-gray-100 dark:bg-gray-900 border-none text-xs font-bold appearance-none cursor-pointer focus:ring-2 focus:ring-purple-500"
+                     >
+                        <option value="all">Todos os Projetos</option>
+                        {filteredHabits.map(h => (
+                            <option key={h.id} value={h.id}>{h.title}</option>
+                        ))}
+                     </select>
+                     <div className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none opacity-50 text-[10px]">▼</div>
+                 </div>
              </div>
         </div>
 
@@ -174,17 +210,21 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
               
               {Array(daysInMonth).fill(null).map((_, i) => {
                   const day = i + 1;
-                  const status = dayStatuses[day] || 'empty';
+                  const dayData = dayStatuses[day] || { caio: false, analaura: false, totalCompleted: 0 };
                   const isToday = day === new Date().getDate() && currentMonth === new Date().getMonth() && currentYear === new Date().getFullYear();
                   
                   let bgClass = 'bg-gray-50 dark:bg-gray-800 text-gray-300';
                   let ringClass = '';
                   let cursorClass = selectedHabitId !== 'all' ? 'cursor-pointer hover:opacity-80' : 'cursor-default';
                   
-                  if (status === 'completed') bgClass = 'bg-green-500 shadow-lg shadow-green-500/30 text-white scale-110';
-                  if (status === 'perfect') bgClass = 'bg-green-500 shadow-lg shadow-green-500/30 text-white scale-110';
-                  if (status === 'good') bgClass = 'bg-green-400/60 text-white';
-                  if (status === 'some') bgClass = 'bg-green-200/50 dark:bg-green-900/40 text-green-900 dark:text-green-100';
+                  // Color Logic: Caio = Azul | Analaura = Rosa | Ambos = Roxo (Mistura de azul + rosa)
+                  if (dayData.caio && dayData.analaura) {
+                    bgClass = 'bg-purple-600 text-white font-black scale-105 shadow-md shadow-purple-600/40 ring-2 ring-purple-400/50';
+                  } else if (dayData.caio) {
+                    bgClass = 'bg-blue-600 text-white font-bold scale-105 shadow-md shadow-blue-500/30';
+                  } else if (dayData.analaura) {
+                    bgClass = 'bg-pink-600 text-white font-bold scale-105 shadow-md shadow-pink-500/30';
+                  }
 
                   if (isToday) ringClass = 'ring-2 ring-black dark:ring-white ring-offset-2 dark:ring-offset-black';
 
@@ -193,7 +233,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
                         key={day} 
                         onClick={() => {
                             if (selectedHabitId !== 'all') {
-                                // FIX: Use local date construction
                                 const dateObj = new Date(currentYear, currentMonth, day);
                                 const dateStr = dateObj.toLocaleDateString('en-CA');
                                 onToggle(selectedHabitId, dateStr);
@@ -210,13 +249,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, habits, onToggle, onRecordM
               })}
            </div>
            
-           <div className="mt-4 flex gap-4 justify-center text-[10px] opacity-50 uppercase font-bold tracking-widest">
-               <div className="flex items-center gap-1"><div className="w-2 h-2 rounded bg-gray-200 dark:bg-gray-800"></div> Nada</div>
-               <div className="flex items-center gap-1"><div className="w-2 h-2 rounded bg-green-200/50"></div> Pouco</div>
-               <div className="flex items-center gap-1"><div className="w-2 h-2 rounded bg-green-500"></div> Tudo</div>
+           <div className="mt-4 flex gap-4 justify-center text-[10px] uppercase font-bold tracking-widest">
+               <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-gray-200 dark:bg-gray-800"></div> Vazio</div>
+               <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-blue-600"></div> Caio</div>
+               <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-pink-600"></div> Analaura</div>
+               <div className="flex items-center gap-1.5"><div className="w-2.5 h-2.5 rounded-full bg-purple-600"></div> Ambos (Roxo)</div>
            </div>
         </div>
       </div>
+
 
       {/* Nutrition Feed */}
       <div className="p-6 bg-white dark:bg-gray-900 rounded-3xl border border-gray-200 dark:border-gray-800 text-center space-y-4 shadow-sm">

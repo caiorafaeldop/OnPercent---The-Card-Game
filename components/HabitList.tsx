@@ -83,68 +83,63 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
          ))}
       </div>
 
-      {/* Owner Filter Tabs */}
-      <div className="flex gap-2 mx-1 p-1 bg-gray-100 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
+      {/* Difficulty Tabs + Dual Color Ball Filter */}
+      <div className="flex items-center gap-2 mx-1">
+        {/* Dual Color Ball Filter */}
         <button
           type="button"
-          onClick={() => setOwnerFilter('all')}
-          className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all ${
-            ownerFilter === 'all'
-              ? 'bg-black text-white dark:bg-white dark:text-black shadow-md'
-              : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
-          }`}
+          onClick={() => {
+            setOwnerFilter(prev => prev === 'all' ? 'caio' : prev === 'caio' ? 'analaura' : 'all');
+          }}
+          title={
+            ownerFilter === 'all' 
+              ? 'Todos (Clique para Caio)' 
+              : ownerFilter === 'caio' 
+              ? 'Apenas Caio (Clique para Analaura)' 
+              : 'Apenas Analaura (Clique para Todos)'
+          }
+          className="relative w-8 h-8 rounded-full border border-gray-300 dark:border-gray-700 overflow-hidden shadow-sm hover:scale-110 active:scale-95 transition-all duration-300 flex-shrink-0 cursor-pointer"
         >
-          Todos
+          {ownerFilter === 'all' && (
+            <div className="w-full h-full flex">
+              <div className="w-1/2 h-full bg-blue-500" />
+              <div className="w-1/2 h-full bg-pink-500" />
+            </div>
+          )}
+          {ownerFilter === 'caio' && (
+            <div className="w-full h-full bg-blue-500 ring-2 ring-blue-300" />
+          )}
+          {ownerFilter === 'analaura' && (
+            <div className="w-full h-full bg-pink-500 ring-2 ring-pink-300" />
+          )}
         </button>
-        <button
-          type="button"
-          onClick={() => setOwnerFilter('caio')}
-          className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all ${
-            ownerFilter === 'caio'
-              ? 'bg-blue-600 text-white shadow-md'
-              : 'text-gray-400 hover:text-blue-500'
-          }`}
-        >
-          Caio
-        </button>
-        <button
-          type="button"
-          onClick={() => setOwnerFilter('analaura')}
-          className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all ${
-            ownerFilter === 'analaura'
-              ? 'bg-pink-600 text-white shadow-md'
-              : 'text-gray-400 hover:text-pink-500'
-          }`}
-        >
-          Analaura
-        </button>
+
+        <div className="flex-1 flex p-1 bg-gray-100 dark:bg-gray-900 rounded-full">
+          {(['easy', 'medium', 'hard'] as const).map((tab) => {
+              const isActive = activeTab === tab;
+              let activeColor = '';
+              if (tab === 'easy') activeColor = 'bg-green-400 text-black shadow-green-400/30';
+              if (tab === 'medium') activeColor = 'bg-yellow-400 text-black shadow-yellow-400/30';
+              if (tab === 'hard') activeColor = 'bg-red-500 text-white shadow-red-500/30';
+
+              return (
+                  <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`
+                          flex-1 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all
+                          ${isActive 
+                              ? `${activeColor} shadow-lg scale-100` 
+                              : 'text-gray-400 hover:text-black dark:hover:text-white'}
+                      `}
+                  >
+                      {tab}
+                  </button>
+              )
+          })}
+        </div>
       </div>
 
-      {/* Difficulty Tabs */}
-      <div className="flex p-1 bg-gray-100 dark:bg-gray-900 rounded-full mx-1">
-        {(['easy', 'medium', 'hard'] as const).map((tab) => {
-            const isActive = activeTab === tab;
-            let activeColor = '';
-            if (tab === 'easy') activeColor = 'bg-green-400 text-black shadow-green-400/30';
-            if (tab === 'medium') activeColor = 'bg-yellow-400 text-black shadow-yellow-400/30';
-            if (tab === 'hard') activeColor = 'bg-red-500 text-white shadow-red-500/30';
-
-            return (
-                <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`
-                        flex-1 py-2 rounded-full text-[10px] font-black uppercase tracking-wider transition-all
-                        ${isActive 
-                            ? `${activeColor} shadow-lg scale-100` 
-                            : 'text-gray-400 hover:text-black dark:hover:text-white'}
-                    `}
-                >
-                    {tab}
-                </button>
-            )
-        })}
-      </div>
 
 
       {/* Invisible Backdrop to close when clicking outside */}
