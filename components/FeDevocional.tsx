@@ -90,7 +90,8 @@ export const FeDevocional: React.FC<FeDevocionalProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto pb-12">
+    <div className="h-full overflow-y-auto space-y-6 max-w-4xl mx-auto pb-24 no-scrollbar pr-1">
+
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-purple-900 via-indigo-900 to-slate-900 p-6 md:p-8 text-white shadow-xl border border-purple-500/20">
         <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
@@ -286,7 +287,7 @@ export const FeDevocional: React.FC<FeDevocionalProps> = ({
                   }`}
                 >
                   <CheckIcon className="w-4 h-4" />
-                  {selectedDevotional.completedByCaio ? 'Caio Concluiu (🟦)' : 'Caio Cumprir'}
+                  {selectedDevotional.completedByCaio ? 'Caio' : 'Caio'}
                 </button>
 
                 <button
@@ -299,7 +300,7 @@ export const FeDevocional: React.FC<FeDevocionalProps> = ({
                   }`}
                 >
                   <CheckIcon className="w-4 h-4" />
-                  {selectedDevotional.completedByAnalaura ? 'Analaura Concluiu (🌸)' : 'Analaura Cumprir'}
+                  {selectedDevotional.completedByAnalaura ? 'Analaura' : 'Analaura'}
                 </button>
               </div>
             </div>

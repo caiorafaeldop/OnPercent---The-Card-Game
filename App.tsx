@@ -398,18 +398,6 @@ const App: React.FC = () => {
                       >
                           ⚡ Limpar Cache & Recarregar
                       </button>
-
-                      <button onClick={handleBackup} className="w-full py-4 rounded-xl bg-gray-100 dark:bg-gray-800 font-bold uppercase text-xs hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
-                          Forçar Backup Manual
-                      </button>
-                      
-                      <button onClick={() => setShowRestoreInput(true)} className="w-full py-4 rounded-xl border-2 border-blue-500/20 text-blue-500 font-bold uppercase text-xs hover:bg-blue-500 hover:text-white transition-colors">
-                          Restaurar Progresso
-                      </button>
-
-                      <button onClick={() => setShowResetConfirm(true)} className="w-full py-4 rounded-xl border-2 border-red-500/20 text-red-500 font-bold uppercase text-xs hover:bg-red-500 hover:text-white transition-colors">
-                          Resetar App
-                      </button>
                   </div>
 
                   <button onClick={() => setShowSettings(false)} className="mt-6 w-full py-2 text-xs font-bold text-gray-400 uppercase">
@@ -418,6 +406,7 @@ const App: React.FC = () => {
               </div>
           </div>
       )}
+
 
       {/* Reset Confirmation Modal */}
       {showResetConfirm && (
