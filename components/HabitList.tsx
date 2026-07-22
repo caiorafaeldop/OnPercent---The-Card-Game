@@ -105,7 +105,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
               : 'text-gray-400 hover:text-blue-500'
           }`}
         >
-          🟦 Caio
+          Caio
         </button>
         <button
           type="button"
@@ -116,7 +116,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
               : 'text-gray-400 hover:text-pink-500'
           }`}
         >
-          🌸 Analaura
+          Analaura
         </button>
       </div>
 
@@ -283,9 +283,9 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
                     type="text"
                     value={newHabit}
                     onChange={(e) => setNewHabit(e.target.value)}
-                    placeholder={`Novo hábito para ${selectedOwner === 'caio' ? 'Caio (Azul)' : 'Laurinha (Rosa)'}...`}
+                    placeholder={`Novo hábito para ${selectedOwner === 'caio' ? 'Caio' : 'Analaura'}`}
                     className="w-full pl-6 pr-4 py-3.5 bg-transparent text-sm font-bold focus:outline-none placeholder-gray-400/70"
-                />
+                />        
             </div>
 
             {/* Single Simple Color Toggle Button (Azul -> Rosa) */}
@@ -293,7 +293,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
               <button
                 type="button"
                 onClick={() => setSelectedOwner(prev => prev === 'caio' ? 'analaura' : 'caio')}
-                title={selectedOwner === 'caio' ? 'Caio (Azul)' : 'Laurinha (Rosa)'}
+                title={selectedOwner === 'caio' ? 'Caio' : 'Analaura'}
                 className={`w-8 h-8 rounded-full transition-all duration-300 transform active:scale-90 shadow-md ${
                   selectedOwner === 'caio'
                     ? 'bg-blue-500 ring-2 ring-blue-300/60 shadow-blue-500/40 scale-100'
@@ -318,4 +318,4 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
 
 export default HabitList;
 
-
+
