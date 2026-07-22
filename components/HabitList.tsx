@@ -23,6 +23,7 @@ const getLast7Days = () => {
 const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete }) => {
   const [newHabit, setNewHabit] = useState('');
   const [activeTab, setActiveTab] = useState<'easy'|'medium'|'hard'>('medium');
+  const [ownerFilter, setOwnerFilter] = useState<'all' | 'caio' | 'analaura'>('all');
   const [selectedOwner, setSelectedOwner] = useState<'caio' | 'analaura'>('caio');
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const weekDays = getLast7Days();
@@ -56,7 +57,11 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
       return 'bg-gray-100 dark:bg-gray-800 text-transparent scale-75 hover:scale-90 opacity-50 hover:opacity-100';
   };
 
-  const filteredHabits = habits.filter(h => (h.difficulty || 'medium') === activeTab);
+  const filteredHabits = habits.filter(h => {
+    const matchesDifficulty = (h.difficulty || 'medium') === activeTab;
+    const matchesOwner = ownerFilter === 'all' || (h.owner || 'caio') === ownerFilter;
+    return matchesDifficulty && matchesOwner;
+  });
 
   return (
     <div className="flex flex-col h-full space-y-6 pb-20">
@@ -76,6 +81,43 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
              <span className="text-[9px] font-black uppercase text-gray-400">{formatDisplayDay(day)}</span>
            </div>
          ))}
+      </div>
+
+      {/* Owner Filter Tabs */}
+      <div className="flex gap-2 mx-1 p-1 bg-gray-100 dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800">
+        <button
+          type="button"
+          onClick={() => setOwnerFilter('all')}
+          className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all ${
+            ownerFilter === 'all'
+              ? 'bg-black text-white dark:bg-white dark:text-black shadow-md'
+              : 'text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+          }`}
+        >
+          Todos
+        </button>
+        <button
+          type="button"
+          onClick={() => setOwnerFilter('caio')}
+          className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all ${
+            ownerFilter === 'caio'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-gray-400 hover:text-blue-500'
+          }`}
+        >
+          🟦 Caio
+        </button>
+        <button
+          type="button"
+          onClick={() => setOwnerFilter('analaura')}
+          className={`flex-1 py-1.5 rounded-xl text-xs font-black transition-all ${
+            ownerFilter === 'analaura'
+              ? 'bg-pink-600 text-white shadow-md'
+              : 'text-gray-400 hover:text-pink-500'
+          }`}
+        >
+          🌸 Analaura
+        </button>
       </div>
 
       {/* Difficulty Tabs */}
@@ -103,6 +145,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
             )
         })}
       </div>
+
 
       {/* Invisible Backdrop to close when clicking outside */}
       {deletingId && (

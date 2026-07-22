@@ -365,7 +365,10 @@ const App: React.FC = () => {
         return <HabitList habits={habits} onAdd={addHabit} onToggle={toggleHabit} onDelete={deleteHabit} />;
     }
   };
-
+  const handleClearCache = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
 
   return (
     <Layout 
@@ -389,6 +392,13 @@ const App: React.FC = () => {
                   <h3 className="text-xl font-black uppercase text-center mb-6">Configurações</h3>
                   
                   <div className="space-y-3">
+                      <button 
+                          onClick={handleClearCache} 
+                          className="w-full py-4 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 font-extrabold uppercase text-xs hover:bg-amber-500 hover:text-white transition-all shadow-sm flex items-center justify-center gap-2 border border-amber-500/30"
+                      >
+                          ⚡ Limpar Cache & Recarregar
+                      </button>
+
                       <button onClick={handleBackup} className="w-full py-4 rounded-xl bg-gray-100 dark:bg-gray-800 font-bold uppercase text-xs hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                           Forçar Backup Manual
                       </button>
