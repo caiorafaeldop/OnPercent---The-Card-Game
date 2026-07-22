@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { serve } from '@hono/node-server';
@@ -18,7 +18,6 @@ import {
   UserState
 } from './persistence.js';
 
-
 const app = new Hono();
 
 // Middleware
@@ -32,7 +31,7 @@ app.use('*', cors({
 }));
 
 // API Routes
-app.get('/api/health', (c) => {
+app.get('/api/health', (c: Context) => {
   return c.json({
     status: 'ok',
     databaseMode: isDatabaseMode,
@@ -40,7 +39,7 @@ app.get('/api/health', (c) => {
   });
 });
 
-app.get('/api/habits', async (c) => {
+app.get('/api/habits', async (c: Context) => {
   try {
     const habits = await getHabits();
     return c.json(habits);
@@ -50,7 +49,7 @@ app.get('/api/habits', async (c) => {
   }
 });
 
-app.post('/api/habits', async (c) => {
+app.post('/api/habits', async (c: Context) => {
   try {
     const body = await c.req.json<Habit[]>();
     await saveHabits(body);
@@ -61,7 +60,7 @@ app.post('/api/habits', async (c) => {
   }
 });
 
-app.get('/api/journal', async (c) => {
+app.get('/api/journal', async (c: Context) => {
   try {
     const entries = await getJournal();
     return c.json(entries);
@@ -71,7 +70,7 @@ app.get('/api/journal', async (c) => {
   }
 });
 
-app.post('/api/journal', async (c) => {
+app.post('/api/journal', async (c: Context) => {
   try {
     const body = await c.req.json<JournalEntry[]>();
     await saveJournal(body);
@@ -82,7 +81,7 @@ app.post('/api/journal', async (c) => {
   }
 });
 
-app.get('/api/user', async (c) => {
+app.get('/api/user', async (c: Context) => {
   try {
     const user = await getUser();
     return c.json(user);
@@ -92,7 +91,7 @@ app.get('/api/user', async (c) => {
   }
 });
 
-app.post('/api/user', async (c) => {
+app.post('/api/user', async (c: Context) => {
   try {
     const body = await c.req.json<UserState>();
     await saveUser(body);
@@ -103,7 +102,7 @@ app.post('/api/user', async (c) => {
   }
 });
 
-app.get('/api/dcc', async (c) => {
+app.get('/api/dcc', async (c: Context) => {
   try {
     const dcc = await getDcc();
     return c.json(dcc);
@@ -113,7 +112,7 @@ app.get('/api/dcc', async (c) => {
   }
 });
 
-app.post('/api/dcc', async (c) => {
+app.post('/api/dcc', async (c: Context) => {
   try {
     const body = await c.req.json<Record<string, any>>();
     await saveDcc(body);
@@ -123,7 +122,6 @@ app.post('/api/dcc', async (c) => {
     return c.json({ error: 'Internal Server Error' }, 500);
   }
 });
-
 
 // Serve Static Frontend (Monolith Mode)
 app.use('/assets/*', serveStatic({ root: './dist' }));
@@ -136,6 +134,7 @@ app.use('/*', serveStatic({ root: '../dist' }));
 // SPA Fallback for non-API routes
 app.get('*', serveStatic({ root: './dist', path: 'index.html' }));
 app.get('*', serveStatic({ root: '../dist', path: 'index.html' }));
+
 
 const port = Number(process.env.PORT) || 3001;
 

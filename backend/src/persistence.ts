@@ -65,7 +65,7 @@ export async function getHabits(): Promise<Habit[]> {
   if (isDatabaseMode && pool) {
     try {
       const res = await pool.query('SELECT * FROM habits');
-      return res.rows.map(row => ({
+      return res.rows.map((row: any) => ({
         id: row.id,
         title: row.title,
         difficulty: row.difficulty,
@@ -110,12 +110,13 @@ export async function getJournal(): Promise<JournalEntry[]> {
   if (isDatabaseMode && pool) {
     try {
       const res = await pool.query('SELECT * FROM journal');
-      return res.rows.map(row => ({
+      return res.rows.map((row: any) => ({
         id: row.id,
         date: row.date,
         content: row.content,
         rating: row.rating
       }));
+
     } catch (err) {
       console.error('Failed to load journal from DB, using local fallback:', err);
     }
