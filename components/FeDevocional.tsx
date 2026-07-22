@@ -1,17 +1,19 @@
+import React, { useState } from 'react';
+import { Devotional } from '../types';
 import { BookIcon, CheckIcon, CircleIcon, PlusIcon, HeartIcon, SparklesIcon, XIcon, QuoteIcon } from './Icons';
 
-
 interface FeDevocionalProps {
-  devotionals: Devotional[];
+  devotionals?: Devotional[];
   onUpdateDevotional: (devotional: Devotional) => void;
   onAddDevotional: (devotional: Devotional) => void;
 }
 
 export const FeDevocional: React.FC<FeDevocionalProps> = ({
-  devotionals,
+  devotionals = [],
   onUpdateDevotional,
   onAddDevotional
 }) => {
+
   const [selectedDevotional, setSelectedDevotional] = useState<Devotional | null>(null);
   const [activeUser, setActiveUser] = useState<'caio' | 'analaura'>('caio');
   const [noteInput, setNoteInput] = useState('');

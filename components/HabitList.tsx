@@ -288,33 +288,18 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
                 />
             </div>
 
-            {/* Owner Toggle Buttons next to + */}
-            <div className="flex items-center gap-1.5 pr-1">
+            {/* Single Simple Color Toggle Button (Azul -> Rosa) */}
+            <div className="flex items-center gap-2 pr-1">
               <button
                 type="button"
-                onClick={() => setSelectedOwner('caio')}
-                title="Criar hábito para Caio"
-                className={`px-3 py-2 rounded-xl text-xs font-black transition-all ${
+                onClick={() => setSelectedOwner(prev => prev === 'caio' ? 'analaura' : 'caio')}
+                title={selectedOwner === 'caio' ? 'Caio (Azul)' : 'Laurinha (Rosa)'}
+                className={`w-8 h-8 rounded-full transition-all duration-300 transform active:scale-90 shadow-md ${
                   selectedOwner === 'caio'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/40 scale-105'
-                    : 'bg-gray-200 dark:bg-slate-800 text-gray-400 hover:text-blue-500'
+                    ? 'bg-blue-500 ring-2 ring-blue-300/60 shadow-blue-500/40 scale-100'
+                    : 'bg-pink-500 ring-2 ring-pink-300/60 shadow-pink-500/40 scale-100'
                 }`}
-              >
-                🟦 Caio
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setSelectedOwner('analaura')}
-                title="Criar hábito para Analaura"
-                className={`px-3 py-2 rounded-xl text-xs font-black transition-all ${
-                  selectedOwner === 'analaura'
-                    ? 'bg-pink-600 text-white shadow-md shadow-pink-600/40 scale-105'
-                    : 'bg-gray-200 dark:bg-slate-800 text-gray-400 hover:text-pink-500'
-                }`}
-              >
-                🌸 Rosa
-              </button>
+              />
 
               <button
                 type="submit"
@@ -324,6 +309,7 @@ const HabitList: React.FC<HabitListProps> = ({ habits, onToggle, onAdd, onDelete
                 <PlusIcon className="w-4 h-4" />
               </button>
             </div>
+
         </div>
       </form>
     </div>
