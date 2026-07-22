@@ -359,6 +359,9 @@ const App: React.FC = () => {
             unlockedAchievements={unlockedAchievements} 
             onAddCredits={handleAddCredits}
             onPullGacha={handlePullGacha}
+            onOpenSettings={() => setShowSettings(true)}
+            isDark={isDark}
+            toggleTheme={() => setIsDark(!isDark)}
           />
         );
       default:
@@ -374,10 +377,8 @@ const App: React.FC = () => {
     <Layout 
       activeTab={activeTab} 
       onTabChange={setActiveTab}
-      isDark={isDark}
-      toggleTheme={() => setIsDark(!isDark)}
-      onOpenSettings={() => setShowSettings(true)}
     >
+
       <div className="w-full max-w-md mx-auto h-full flex flex-col">
         <DailyBonus onAddCredits={handleAddCredits} />
         <div className="flex-1 min-h-0 overflow-hidden relative">

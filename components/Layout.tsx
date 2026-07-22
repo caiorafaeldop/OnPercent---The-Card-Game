@@ -6,12 +6,9 @@ interface LayoutProps {
   children: React.ReactNode;
   activeTab: Tab;
   onTabChange: (tab: Tab) => void;
-  isDark: boolean;
-  toggleTheme: () => void;
-  onOpenSettings: () => void;
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDark, toggleTheme, onOpenSettings }) => {
+const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange }) => {
   const navItems: { id: Tab; icon: React.ReactNode; label: string }[] = [
     { id: 'habits', icon: <ListIcon className="w-6 h-6" />, label: 'Habitos' },
     { id: 'dashboard', icon: <CalendarIcon className="w-6 h-6" />, label: 'Dash' },
@@ -20,30 +17,12 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, onTabChange, isDar
     { id: 'profile', icon: <TrophyIcon className="w-6 h-6" />, label: 'Perfil' },
   ];
 
-
   return (
     <div className="h-screen w-full overflow-hidden flex flex-col bg-white dark:bg-black text-black dark:text-white transition-colors duration-300">
-      <div className="absolute top-0 right-0 p-4 z-50 flex gap-2">
-        <button
-          onClick={onOpenSettings}
-          className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white transition-all active:scale-95"
-          title="Configuracoes"
-        >
-          <SettingsIcon className="w-5 h-5" />
-        </button>
-
-        <button
-          onClick={toggleTheme}
-          className="p-2 rounded-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white transition-all active:scale-95"
-          title="Alternar tema"
-        >
-          {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
-        </button>
-      </div>
-
-      <main className="flex-1 p-6 overflow-hidden relative max-w-md mx-auto w-full h-full pt-12">
+      <main className="flex-1 p-6 overflow-hidden relative max-w-md mx-auto w-full h-full pt-4">
         {children}
       </main>
+
 
       <nav className="h-20 bg-white dark:bg-black border-t border-gray-100 dark:border-gray-900 flex justify-around items-center px-2 pb-2 z-40 max-w-md mx-auto w-full fixed bottom-0 left-0 right-0 md:relative">
         {navItems.map((item) => {

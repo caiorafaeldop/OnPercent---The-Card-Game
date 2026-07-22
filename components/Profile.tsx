@@ -3,7 +3,7 @@ import { UserState, Collectible } from '../types';
 import { ACHIEVEMENTS_LIST, LEVEL_THRESHOLDS } from '../services/gamification';
 import { pullGacha, COLLECTIBLES, GACHA_COST } from '../services/gacha';
 import { exportData, saveUser } from '../services/storage';
-import { BookIcon, TrophyIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from './Icons';
+import { BookIcon, TrophyIcon, CalendarIcon, ChevronLeftIcon, ChevronRightIcon, SettingsIcon, SunIcon, MoonIcon } from './Icons';
 import CollectionModal from './CollectionModal';
 import GachaReveal from './GachaReveal';
 import HolographicCard from './HolographicCard';
@@ -13,9 +13,20 @@ interface ProfileProps {
   unlockedAchievements: string[];
   onAddCredits: (amount: number) => void;
   onPullGacha: (newItemId: string) => void;
+  onOpenSettings: () => void;
+  isDark: boolean;
+  toggleTheme: () => void;
 }
 
-const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCredits, onPullGacha }) => {
+const Profile: React.FC<ProfileProps> = ({ 
+  user, 
+  unlockedAchievements, 
+  onAddCredits, 
+  onPullGacha,
+  onOpenSettings,
+  isDark,
+  toggleTheme
+}) => {
   const [lastReward, setLastReward] = useState<string | null>(null);
   const [viewCard, setViewCard] = useState<Collectible | null>(null);
   const [showBackupAlert, setShowBackupAlert] = useState(false);
@@ -78,7 +89,31 @@ const Profile: React.FC<ProfileProps> = ({ user, unlockedAchievements, onAddCred
 
   return (
     <div className="flex flex-col h-full overflow-y-auto no-scrollbar pb-32">
-       <div className="px-1 pt-4">
+       <div className="px-1 pt-2">
+            {/* Header with Title & Settings / Theme Buttons */}
+            <header className="flex justify-between items-center mb-6 px-1">
+              <h2 className="text-3xl font-black tracking-tighter uppercase italic bg-clip-text text-transparent bg-gradient-to-r from-black to-gray-500 dark:from-white dark:to-gray-500">
+                  Perfil
+              </h2>
+              <div className="flex gap-2">
+                <button
+                  onClick={onOpenSettings}
+                  className="p-2.5 rounded-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white transition-all active:scale-95 shadow-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                  title="Configurações"
+                >
+                  <SettingsIcon className="w-5 h-5" />
+                </button>
+
+                <button
+                  onClick={toggleTheme}
+                  className="p-2.5 rounded-full bg-gray-100 dark:bg-gray-800 text-black dark:text-white transition-all active:scale-95 shadow-sm hover:bg-gray-200 dark:hover:bg-gray-700"
+                  title="Alternar tema"
+                >
+                  {isDark ? <SunIcon className="w-5 h-5" /> : <MoonIcon className="w-5 h-5" />}
+                </button>
+              </div>
+            </header>
+
             {showBackupAlert && (
                 <div className="bg-red-500 text-white p-4 rounded-xl shadow-lg animate-pulse mb-6">
                 <div className="flex justify-between items-center mb-2">
